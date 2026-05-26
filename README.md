@@ -13,7 +13,7 @@ Se vais construir um projecto Laravel + Vue e queres usar agentes de IA de forma
 - Convenções claras que o agente respeita (`CLAUDE.md`)
 - Sub-agentes especializados em backend e frontend
 - Sensores que apanham bugs antes do PR (PHPStan, Pint, Pest, vue-tsc, ESLint, Vitest)
-- AI review + security review via GitHub Actions oficiais do Claude Code (comentários inline no PR, rubrica = o teu `CLAUDE.md`)
+- AI review (qualidade + segurança) via Claude Code Action — comentários inline no PR; rubrica = o teu `CLAUDE.md`; corre na tua subscrição (OAuth) ou via API
 - Kill switch e budgets para limitar danos quando algo correr mal
 - Eval set para detectar regressões
 - Trajectory logging para perceber o que o agente realmente fez
@@ -59,8 +59,14 @@ docker-compose exec app php artisan migrate
 
 ### 5. Configurar o CI
 
-No GitHub do teu projecto: **Settings → Secrets and variables → Actions →
-New repository secret**: `ANTHROPIC_API_KEY`.
+Para o job de **AI review**, em **Settings → Secrets and variables → Actions →
+New repository secret**, escolhe **uma** via:
+
+- **Subscrição Pro/Max** (sem custos de API): corre `claude setup-token` localmente
+  e guarda o resultado em `CLAUDE_CODE_OAUTH_TOKEN`.
+- **API**: guarda a tua chave em `ANTHROPIC_API_KEY`.
+
+Sem nenhum dos dois, o job de AI review é saltado (não falha o CI).
 
 ### 6. Validar que tudo funciona
 
