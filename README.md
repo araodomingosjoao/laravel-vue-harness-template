@@ -3,7 +3,7 @@
 > Template GitHub para projectos Laravel 13 + Vue 3 construídos maioritariamente
 > por agentes de IA (Claude Code, Cursor, etc.) com humano no papel de reviewer.
 
-[![Template version](https://img.shields.io/badge/template-v2.0.0-blue)](CHANGELOG.template.md)
+[![Template version](https://img.shields.io/badge/template-v2.1.0-blue)](CHANGELOG.template.md)
 
 ## Para que serve
 

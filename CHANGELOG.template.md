@@ -14,6 +14,17 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.1.0] - 2026-05-26
+
+### Mudou
+- Base de dados passou de MySQL para **PostgreSQL 18** (`docker-compose.yml`, serviços do CI, `config/database.php`, `.env.example`, default do `init.sh`)
+- Stack actualizada para as últimas versões estáveis: Laravel 13, PHP 8.4, Vue 3.5, Vite 8, Vitest 4, Pest 4, Larastan 3, ESLint 10, TypeScript 6, Pinia 3, Node 24, Playwright 1.60
+- `eslint.config.js` migrado para a API `defineConfigWithVueTs` (`@vue/eslint-config-typescript` v14)
+
+### Adicionado
+- Secção "Convenções de commits" no `CLAUDE.md` — Conventional Commits, em inglês, sem rodapés de co-autoria
+- Princípio "segue sempre as últimas versões estáveis" no `CLAUDE.md` e no `README.md`
+
 ## [2.0.0] - 2026-05-26
 
 ### Mudou (BREAKING)

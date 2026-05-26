@@ -13,7 +13,7 @@ que versão do template foi criado.
 
 ```bash
 cat .harness-template-version
-# 2.0.0
+# 2.1.0
 ```
 
 Confronta com a [última release do template](https://github.com/araodomingosjoao/laravel-vue-harness-template/releases).
