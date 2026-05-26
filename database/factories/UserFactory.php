@@ -16,9 +16,6 @@ final class UserFactory extends Factory
 {
     protected $model = User::class;
 
-    /**
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [

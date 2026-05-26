@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 pest()
-    ->extend(Tests\TestCase::class)
+    ->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
 pest()
-    ->extend(Tests\TestCase::class)
+    ->extend(TestCase::class)
     ->in('Unit');
 
 // Expectations e helpers globais — adiciona aqui à medida que precisares.

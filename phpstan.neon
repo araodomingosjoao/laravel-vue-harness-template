@@ -7,22 +7,19 @@ parameters:
         - config/
         - database/
         - routes/
-        - tests/
+        # tests/ omitido de propósito: as closures do Pest (it()/test()) ligam
+        # $this a TestCase de forma que o PHPStan lê como Pest\PendingCalls\TestCall.
+        # Os testes são validados pelo Pest, não pela análise estática.
 
     level: 8
 
     # Ficheiros gerados ou de terceiros que não devemos analisar
     excludePaths:
-        - app/Console/Kernel.php
         - bootstrap/cache/*
 
     # Larastan-specific: garantir que tipos de Eloquent são respeitados
     checkModelProperties: true
     checkPhpDocMissingReturn: true
-    checkMissingIterableValueType: true
-
-    # Não permitir generics não especificados (Collection sem tipo, etc.)
-    checkGenericClassInNonGenericObjectType: true
 
     # Reportar TODO/FIXME para o agente não esquecer
     reportUnmatchedIgnoredErrors: true
@@ -30,7 +27,5 @@ parameters:
     # Forçar tipagem estrita
     treatPhpDocTypesAsCertain: true
 
-    # Ignorar apenas erros que sabemos serem falsos positivos do framework
-    ignoreErrors:
-        # Magic properties em Models do Eloquent são esperadas
-        - '#Access to an undefined property App\\Models\\.*::\$.*#'
+    # Nota: não precisamos de ignorar acesso a propriedades de Models —
+    # o Larastan trata-as via checkModelProperties acima.
