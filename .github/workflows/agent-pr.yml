@@ -287,7 +287,9 @@ jobs:
       - run: composer install --no-interaction
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - name: Start servers
+      # Arranque do servidor e os testes vivem no MESMO step: processos em
+      # background não sobrevivem ao fim de um step no GitHub Actions.
+      - name: Run e2e
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -299,10 +301,9 @@ jobs:
           cp .env.example .env
           php artisan key:generate
           php artisan migrate --seed --force
-          php artisan serve --host=0.0.0.0 --port=8000 &
-          pnpm run dev &
-          sleep 5
-      - run: pnpm exec playwright test
+          php artisan serve --host=127.0.0.1 --port=8000 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/up >/dev/null && break; sleep 1; done
+          pnpm exec playwright test
 
   # ─────────────────────────────────────────────────────────────
   # EVAL SET (semanal)
