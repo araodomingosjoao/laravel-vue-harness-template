@@ -7,9 +7,7 @@ parameters:
         - config/
         - database/
         - routes/
-        # tests/ omitido de propósito: as closures do Pest (it()/test()) ligam
-        # $this a TestCase de forma que o PHPStan lê como Pest\PendingCalls\TestCall.
-        # Os testes são validados pelo Pest, não pela análise estática.
+        # tests/ fora: closures do Pest confundem a análise ($this lido como TestCall)
 
     level: 8
 
@@ -26,6 +24,3 @@ parameters:
 
     # Forçar tipagem estrita
     treatPhpDocTypesAsCertain: true
-
-    # Nota: não precisamos de ignorar acesso a propriedades de Models —
-    # o Larastan trata-as via checkModelProperties acima.

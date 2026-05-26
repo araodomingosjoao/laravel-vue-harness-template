@@ -20,24 +20,20 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - Base de dados passou de MySQL para **PostgreSQL 18** (`docker-compose.yml`, serviços do CI, `config/database.php`, `.env.example`, default do `init.sh`)
 - Gestor de pacotes do frontend passou de **npm para pnpm** (`packageManager` no `package.json`, `pnpm/action-setup` no CI, `corepack` no docker-compose, docs e agentes)
 - Stack actualizada para as últimas versões estáveis que o ecossistema suporta: Laravel 12, PHP 8.4, Vue 3.5, Vite 8, Vitest 4, Pest 4, Larastan 3, ESLint 10, TypeScript 6, Pinia 3, Node 24, Playwright 1.60 (Laravel 13 ainda não resolve — `tinker`/plugins capam em 12)
+- AI review do CI migrado do `ai_review.py` (rubrica custom de 12 regras) para a action oficial `anthropics/claude-code-action@v1`: repo-aware, comenta inline, usa o `CLAUDE.md` como rubrica (fonte de verdade única, sem drift)
 - `eslint.config.js` migrado para a API `defineConfigWithVueTs` (`@vue/eslint-config-typescript` v14)
 - Lock files (`composer.lock`, `pnpm-lock.yaml`) passam a ser commitados; o CI usa `--frozen-lockfile`
 
 ### Adicionado
 - Secção "Convenções de commits" no `CLAUDE.md` — Conventional Commits, em inglês, sem rodapés de co-autoria
-- Princípio "segue sempre as últimas versões estáveis" no `CLAUDE.md` e no `README.md`
+- Secção "Convenções de comentários" no `CLAUDE.md` — comentários explicam o porquê, não o quê
+- Princípio "segue as últimas versões estáveis que o ecossistema suporta" no `CLAUDE.md` e no `README.md`
 - Job `security-review` com a action oficial `anthropics/claude-code-security-review`
-
-### Mudou
-- AI review do CI migrado do `ai_review.py` (rubrica custom de 12 regras) para a
-  action oficial `anthropics/claude-code-action@v1`: repo-aware, comenta inline,
-  e usa o `CLAUDE.md` como rubrica (fonte de verdade única, sem drift)
+- `.gitignore` padrão do Laravel em `bootstrap/cache` e `storage/*` (um clone fresco arranca sem passos manuais)
 
 ### Corrigido
-- `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch`
-  porque `github.base_ref` está vazio fora de PRs. O script tornou-se resiliente
-  (base inválida/SHA nulo/primeiro commit → risco "low") e o workflow passa a usar
-  `HEAD~1` como base nesses eventos.
+- `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch` porque `github.base_ref` está vazio fora de PRs — agora é resiliente e o workflow usa `HEAD~1` como base nesses eventos
+- Template passa agora os próprios gates: `App.vue` válido antes do `init.sh`, `tsconfig` sem `baseUrl` (TS 6), `phpstan.neon` compatível com PHPStan 2, e Pest do CI sem o gate de 80% de cobertura (impossível num esqueleto)
 
 ## [2.0.0] - 2026-05-26
 

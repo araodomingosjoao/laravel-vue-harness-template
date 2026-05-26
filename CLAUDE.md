@@ -155,6 +155,29 @@ pnpm gates                                # typecheck + lint + vitest
 - **Composables**: `useThings.ts` — camelCase com prefixo `use`
 - **Stores**: `thingsStore.ts` exporta `useThingsStore`
 
+## Convenções de comentários
+
+Comentários explicam o **porquê**, não o **quê**. O código já diz o quê; um
+comentário só ganha o seu lugar quando acrescenta algo que o código não consegue
+dizer sozinho.
+
+**Comenta quando:**
+- A razão de uma decisão não é óbvia — um workaround, uma escolha contra-intuitiva, um *gotcha* que evita uma regressão futura.
+- Uma omissão é deliberada e alguém a desfaria sem saber porquê (ex.: "sem cache aqui: este job não instala").
+
+**NÃO comentes quando:**
+- Apenas narras a linha seguinte (`// incrementa o contador`).
+- Repetes o nome da função, variável ou job (um job `code-review` não precisa de um comentário a dizer "faz review do código").
+- Explicas uma ausência ("não precisamos de X") — a ausência não precisa de justificação.
+- Documentas a versão ou o estado actual, que o git e o `CHANGELOG` já registam.
+
+**Forma:**
+- Curto. Uma linha chega quase sempre; se precisas de um parágrafo, talvez o código devesse ser mais claro.
+- Iguala a densidade de comentários do código à volta — não introduzas um estilo mais verboso do que o ficheiro já tem.
+- Prefere docstrings/PHPDoc a comentários soltos quando a linguagem os suporta e eles acrescentam tipo ou contrato.
+
+> Na dúvida, não comentes. É mais fácil acrescentar um comentário em falta do que limpar ruído.
+
 ## Convenções de commits
 
 Seguimos [Conventional Commits](https://www.conventionalcommits.org/). É o padrão
