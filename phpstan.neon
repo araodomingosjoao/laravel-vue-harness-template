@@ -1,0 +1,36 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - config/
+        - database/
+        - routes/
+        - tests/
+
+    level: 8
+
+    # Ficheiros gerados ou de terceiros que não devemos analisar
+    excludePaths:
+        - app/Console/Kernel.php
+        - bootstrap/cache/*
+
+    # Larastan-specific: garantir que tipos de Eloquent são respeitados
+    checkModelProperties: true
+    checkPhpDocMissingReturn: true
+    checkMissingIterableValueType: true
+
+    # Não permitir generics não especificados (Collection sem tipo, etc.)
+    checkGenericClassInNonGenericObjectType: true
+
+    # Reportar TODO/FIXME para o agente não esquecer
+    reportUnmatchedIgnoredErrors: true
+
+    # Forçar tipagem estrita
+    treatPhpDocTypesAsCertain: true
+
+    # Ignorar apenas erros que sabemos serem falsos positivos do framework
+    ignoreErrors:
+        # Magic properties em Models do Eloquent são esperadas
+        - '#Access to an undefined property App\\Models\\.*::\$.*#'

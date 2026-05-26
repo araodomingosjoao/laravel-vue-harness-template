@@ -1,0 +1,107 @@
+# Configuração central do harness
+#
+# Tudo que controla o comportamento do agente vive aqui.
+# Mudanças neste ficheiro requerem revisor humano sénior.
+
+# ─── Kill switch global ──────────────────────────────
+# Para desabilitar o agente totalmente: enabled: false
+# Para desabilitar só PRs automáticos mas permitir uso interactivo: pr_creation: false
+enabled: true
+pr_creation: true
+emergency_contact: "[email protected]"
+
+# ─── Orçamentos por task ─────────────────────────────
+# Se excedidos, o agente PARA e pede intervenção humana.
+budgets:
+  max_tokens_per_task: 200000
+  max_tool_calls_per_task: 80
+  max_duration_seconds: 1800
+  max_files_changed: 25
+  max_lines_changed: 1500
+  max_cost_usd: 5.00       # estimativa baseada em pricing actual
+
+# ─── Rate limiting ───────────────────────────────────
+rate_limits:
+  max_prs_per_hour: 5
+  max_prs_per_day: 30
+  max_concurrent_sessions: 3
+  cooldown_after_failure_minutes: 10
+
+# ─── Classificação de risco por caminho ──────────────
+# Cada PR é classificado pelo maior risco dos seus ficheiros.
+# Determina quem pode aprovar e que gates correm.
+risk_classification:
+  critical:
+    # Requer 2 reviewers humanos sénior, todos os gates
+    paths:
+      - "app/Http/Middleware/**"
+      - "app/Providers/AuthServiceProvider.php"
+      - "config/auth.php"
+      - "config/sanctum.php"
+      - "config/cors.php"
+      - "config/session.php"
+      - "database/migrations/**destructive**"
+      - ".github/workflows/**"
+      - "config/harness/**"
+
+  high:
+    # Requer 1 reviewer humano, todos os gates
+    paths:
+      - "config/**"
+      - "database/migrations/**"
+      - "app/Policies/**"
+      - "app/Http/Requests/**"
+      - "routes/**"
+
+  medium:
+    # 1 reviewer (pode ser o autor original da feature), gates standard
+    paths:
+      - "app/**"
+      - "resources/js/**"
+      - "resources/views/**"
+
+  low:
+    # Pode auto-merge se todos os gates passarem
+    paths:
+      - "tests/**"
+      - "docs/**"
+      - "**/*.md"
+
+# ─── Operações que requerem aprovação humana explícita ──
+# O agente NUNCA executa estas sem confirmação interactiva.
+requires_human_approval:
+  - "php artisan migrate:fresh"
+  - "php artisan migrate:rollback"
+  - "composer require"
+  - "composer remove"
+  - "composer update"
+  - "npm install"
+  - "npm uninstall"
+  - "rm -rf"
+  - "git push --force"
+  - "git reset --hard"
+  - "DROP TABLE"
+  - "TRUNCATE"
+
+# ─── Caminhos read-only para o agente ────────────────
+# O agente pode LER mas nunca ESCREVER nestes caminhos.
+read_only_paths:
+  - ".env"
+  - ".env.*"
+  - "vendor/**"
+  - "node_modules/**"
+  - "storage/logs/**"
+  - ".git/**"
+  - "config/harness/**"   # o agente não muda a sua própria config
+
+# ─── Notificações ────────────────────────────────────
+notifications:
+  on_budget_exceeded:
+    - slack: "#harness-alerts"
+    - email: "[email protected]"
+  on_kill_switch_triggered:
+    - slack: "#engineering"
+    - pagerduty: true
+  on_unusual_activity:
+    # Ex: PR a mexer em >20 ficheiros, ou sequência de PRs falhados
+    - slack: "#harness-alerts"

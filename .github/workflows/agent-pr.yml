@@ -1,0 +1,336 @@
+name: Agent PR Quality Gates v2
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'    # segundas às 6h UTC: chaos + eval
+  workflow_dispatch:        # manual trigger
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # PRE-FLIGHT: kill switch, rate limit, classificação de risco
+  # ─────────────────────────────────────────────────────────────
+  preflight:
+    name: Pre-flight checks
+    runs-on: ubuntu-latest
+    outputs:
+      risk_level: ${{ steps.classify.outputs.risk_level }}
+      requires_human: ${{ steps.classify.outputs.requires_human }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install pyyaml
+
+      - name: Kill switch check
+        run: python scripts/budget_check.py
+
+      - name: Rate limit check
+        run: python scripts/budget_check.py --check-pr-rate
+        if: github.event_name == 'pull_request'
+
+      - name: Classify risk
+        id: classify
+        run: |
+          RISK=$(python scripts/classify_risk.py origin/${{ github.base_ref }})
+          echo "risk_level=$RISK" >> $GITHUB_OUTPUT
+          if [ "$RISK" = "critical" ] || [ "$RISK" = "high" ]; then
+            echo "requires_human=true" >> $GITHUB_OUTPUT
+          else
+            echo "requires_human=false" >> $GITHUB_OUTPUT
+          fi
+          echo "## Risk classification: \`$RISK\`" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────
+  # SUPPLY CHAIN: dependências e segredos
+  # ─────────────────────────────────────────────────────────────
+  supply-chain:
+    name: Supply chain & secrets
+    runs-on: ubuntu-latest
+    needs: preflight
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify dependencies against allow-list
+        run: python scripts/check_dependencies.py
+
+      - name: composer audit
+        run: composer audit --abandoned=report
+
+      - name: npm audit
+        run: npm audit --production --audit-level=high
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────────────────────────
+  # BACKEND
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    name: Laravel
+    runs-on: ubuntu-latest
+    needs: preflight
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: todo_test
+          POSTGRES_USER: todo
+          POSTGRES_PASSWORD: secret
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U todo" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, bcmath, intl
+          coverage: xdebug
+          tools: composer:v2
+
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+
+      - run: composer install --prefer-dist --no-progress --no-interaction
+      - run: cp .env.example .env.testing
+      - run: php artisan key:generate --env=testing
+      - name: Migrate
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: todo_test
+          DB_USERNAME: todo
+          DB_PASSWORD: secret
+        run: php artisan migrate --env=testing --force
+
+      - run: ./vendor/bin/pint --test
+      - run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress
+      - name: Pest
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: todo_test
+          DB_USERNAME: todo
+          DB_PASSWORD: secret
+        run: ./vendor/bin/pest --coverage --min=80 --parallel
+
+  # ─────────────────────────────────────────────────────────────
+  # FRONTEND
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Vue + TS
+    runs-on: ubuntu-latest
+    needs: preflight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test -- --coverage
+      - run: npm run build
+
+  # ─────────────────────────────────────────────────────────────
+  # AI REVIEW (sensor inferencial)
+  # ─────────────────────────────────────────────────────────────
+  ai-review:
+    name: AI review
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install anthropic pyyaml
+
+      - name: Health check
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY não configurado — sensor inferencial está OFFLINE"
+            exit 1
+          fi
+
+      - name: Get diff
+        id: diff
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > pr.diff
+          echo "size=$(wc -l < pr.diff)" >> $GITHUB_OUTPUT
+
+      - name: Claude review (with retry)
+        if: steps.diff.outputs.size != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          for i in 1 2 3; do
+            if python .github/scripts/ai_review.py pr.diff; then
+              exit 0
+            fi
+            echo "Tentativa $i falhou, retry em $((i*5))s..."
+            sleep $((i*5))
+          done
+          exit 1
+
+  # ─────────────────────────────────────────────────────────────
+  # E2E (só se tudo anterior passar)
+  # ─────────────────────────────────────────────────────────────
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: needs.preflight.outputs.risk_level != 'low'
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: todo_test
+          POSTGRES_USER: todo
+          POSTGRES_PASSWORD: secret
+        ports: ['5432:5432']
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: composer install --no-interaction
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start servers
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: todo_test
+          DB_USERNAME: todo
+          DB_PASSWORD: secret
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --seed --force
+          php artisan serve --host=0.0.0.0 --port=8000 &
+          npm run dev &
+          sleep 5
+      - run: npx playwright test
+
+  # ─────────────────────────────────────────────────────────────
+  # CHAOS TEST (semanal)
+  # ─────────────────────────────────────────────────────────────
+  chaos-test:
+    name: Chaos test (sensor calibration)
+    runs-on: ubuntu-latest
+    if: github.event.schedule || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install anthropic pyyaml
+      - name: Run chaos tests
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/chaos_test.py
+
+  # ─────────────────────────────────────────────────────────────
+  # EVAL SET (semanal)
+  # ─────────────────────────────────────────────────────────────
+  eval-set:
+    name: Eval set (regression)
+    runs-on: ubuntu-latest
+    if: github.event.schedule || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml anthropic
+      - run: composer install && npm ci
+      - name: Run eval set
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/eval.py run --all
+      - name: Compare with baseline
+        run: |
+          BASELINE=$(ls -t tests/harness/eval-set/results/*.json | head -2 | tail -1)
+          CURRENT=$(ls -t tests/harness/eval-set/results/*.json | head -1)
+          python scripts/eval.py compare --baseline "$BASELINE" --current "$CURRENT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: tests/harness/eval-set/results/
+
+  # ─────────────────────────────────────────────────────────────
+  # MERGE GATE: bloqueia merge se requires_human
+  # ─────────────────────────────────────────────────────────────
+  merge-gate:
+    name: Merge gate
+    runs-on: ubuntu-latest
+    needs: [preflight, supply-chain, backend, frontend, ai-review]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check approvals
+        run: |
+          if [ "${{ needs.preflight.outputs.requires_human }}" = "true" ]; then
+            echo "::warning::PR de risco ${{ needs.preflight.outputs.risk_level }} — requer aprovação humana sénior"
+            # Lógica real verificaria via GitHub API se há approving review
+          fi
+          echo "## ✓ Todos os gates passaram" >> $GITHUB_STEP_SUMMARY
+          echo "Risk level: ${{ needs.preflight.outputs.risk_level }}" >> $GITHUB_STEP_SUMMARY

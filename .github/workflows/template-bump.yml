@@ -1,0 +1,130 @@
+name: Bump template version
+
+# Workflow manual: cria um PR a fazer bump da versão do template.
+# Usa-o para preparar uma release de forma controlada.
+#
+# Workflow normal:
+#   1. Correr este workflow (Actions → Bump template version → Run workflow)
+#   2. Escolher patch/minor/major
+#   3. Workflow cria branch + PR com mudanças em .harness-template-version e CHANGELOG.template.md
+#   4. Editar o CHANGELOG.template.md no PR para preencher o conteúdo real
+#   5. Merge do PR
+#   6. Criar tag local: git tag v<nova-versão> && git push --tags
+#   7. template-release.yml dispara e cria a release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Tipo de bump (semver)'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calcular nova versão
+        id: version
+        run: |
+          CURRENT=$(cat .harness-template-version | tr -d '[:space:]')
+          echo "Versão actual: $CURRENT"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "${{ inputs.bump_type }}" in
+            patch) PATCH=$((PATCH + 1)) ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+          esac
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+          echo "Nova versão: $NEW"
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "new=$NEW" >> $GITHUB_OUTPUT
+
+      - name: Actualizar ficheiros
+        run: |
+          NEW="${{ steps.version.outputs.new }}"
+          TODAY=$(date +%Y-%m-%d)
+
+          # Bump no .harness-template-version
+          echo "$NEW" > .harness-template-version
+
+          # Adiciona entrada placeholder no topo do CHANGELOG
+          # (developer preenche o conteúdo no PR)
+          python3 <<EOF
+          from pathlib import Path
+          import re
+
+          changelog = Path("CHANGELOG.template.md")
+          content = changelog.read_text()
+
+          new_entry = f"""## [$NEW] - $TODAY
+
+          ### Adicionado
+          - TODO: preencher
+
+          ### Mudou
+          - TODO: preencher
+
+          ### Corrigido
+          - TODO: preencher
+
+          ---
+
+          """
+
+          # Inserir após o cabeçalho "## Como interpretar versões" e o separador
+          pattern = r'(---\n\n)'
+          new_content = re.sub(pattern, r'\1' + new_entry, content, count=1)
+
+          changelog.write_text(new_content)
+          EOF
+
+          # Bump no .github/workflows/agent-pr.yml se mencionar versão
+          # (não é necessário se não menciona)
+
+      - name: Criar PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: bump template version to ${{ steps.version.outputs.new }}"
+          branch: "bump-template-${{ steps.version.outputs.new }}"
+          delete-branch: true
+          title: "chore: bump template to ${{ steps.version.outputs.new }}"
+          body: |
+            ## Bump automático de versão
+
+            **De**: `${{ steps.version.outputs.current }}`
+            **Para**: `${{ steps.version.outputs.new }}` (${{ inputs.bump_type }})
+
+            ### Antes de fazer merge
+
+            1. [ ] Preencher entradas TODO no `CHANGELOG.template.md`
+            2. [ ] Verificar que esta versão respeita semver (ver `docs/template/PHILOSOPHY.md`)
+            3. [ ] Confirmar que o smoke test do template passou
+
+            ### Depois de fazer merge
+
+            Para disparar a release:
+            ```bash
+            git tag v${{ steps.version.outputs.new }}
+            git push --tags
+            ```
+
+            O workflow `template-release.yml` faz o resto.
+          labels: |
+            template-release
+            chore

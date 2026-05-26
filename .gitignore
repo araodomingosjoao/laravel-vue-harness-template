@@ -1,0 +1,48 @@
+# ─── Segredos (NUNCA commitar) ───────────────────────
+.env
+.env.*
+!.env.example
+!.env.testing.example
+*.key
+*.pem
+*.p12
+auth.json
+oauth-private.key
+oauth-public.key
+
+# ─── Laravel ──────────────────────────────────────────
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/private
+/storage/logs/*.log
+/bootstrap/cache/*.php
+.phpunit.result.cache
+.phpunit.cache/
+Homestead.json
+Homestead.yaml
+
+# ─── Frontend ─────────────────────────────────────────
+/public/build
+/public/hot
+.vite/
+dist/
+coverage/
+*.local
+
+# ─── Sistema ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/settings.json.example
+*.swp
+*.swo
+
+# ─── Harness ──────────────────────────────────────────
+.harness/runs/           # logs de execução do agente
+.harness/cache/
+*.agent-trace.json

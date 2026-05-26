@@ -1,0 +1,24 @@
+# Eval set manifest
+#
+# Cada entrada é uma task-padrão usada para medir competência do agente.
+# Categoria determina como pondera a pontuação geral.
+#
+# Vê examples/eval-tasks/ para exemplos completos de tasks.
+
+version: 1
+last_updated: "{{TODAY}}"
+
+tasks:
+  # Adiciona aqui as tuas tasks à medida que descobres áreas críticas.
+  # Categorias sugeridas: crud, authorization, performance, refactor, bug, adversarial
+  #
+  # Exemplo (descomenta e adapta):
+  #
+  # - id: my-first-eval
+  #   category: crud
+  #   description: "Descrição clara do que o agente tem de fazer"
+  #   difficulty: easy        # easy | medium | hard
+  #   expected_duration_seconds: 600
+  #   active: true
+
+deprecated: []

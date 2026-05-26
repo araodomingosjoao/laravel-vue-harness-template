@@ -1,0 +1,58 @@
+# Critérios mensuráveis de sucesso para add-priority-field
+
+hard_gates:
+  phpstan_passes: true
+  pint_clean: true
+  pest_passes: true
+  vitest_passes: true
+  vue_tsc_clean: true
+  build_succeeds: true
+
+required_files_created:
+  - "database/migrations/*_add_priority_to_todos_table.php"
+  - "tests/Feature/TodoPriorityTest.php"
+
+required_files_modified:
+  - "app/Models/Todo.php"
+  - "app/Http/Requests/StoreTodoRequest.php"
+  - "app/Http/Requests/UpdateTodoRequest.php"
+  - "app/Http/Resources/TodoResource.php"
+  - "app/Http/Controllers/Api/TodoController.php"
+  - "resources/js/types/Todo.ts"
+  - "resources/js/components/TodoItem.vue"
+
+forbidden_changes:
+  - ".env"
+  - ".env.example"
+  - "composer.json"
+  - "package.json"
+  - "config/auth.php"
+  - "config/harness/**"
+
+# Verificações no código produzido
+content_checks:
+  - file: "app/Models/Todo.php"
+    must_contain: ["'priority'"]
+    must_not_contain: ["enum", "Priority::class"]   # não devia criar enum class
+  - file: "app/Http/Requests/StoreTodoRequest.php"
+    must_contain: ["in:low,medium,high"]
+  - file: "resources/js/types/Todo.ts"
+    must_contain: ["priority"]
+    must_not_contain: ["any"]
+
+# Testes que devem existir e passar
+required_test_assertions:
+  - "creates todo with default priority medium"
+  - "validates priority must be low medium or high"
+  - "filters todos by priority"
+
+# Métricas de eficiência
+scoring:
+  files_changed_target: 9
+  files_changed_max: 14
+  lines_changed_max: 350
+  tool_calls_max: 35
+  duration_max_seconds: 600
+  cost_max_usd: 1.50
+
+ai_judge_min_score: 0.75

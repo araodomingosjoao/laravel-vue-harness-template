@@ -1,0 +1,24 @@
+diff --git a/app/Models/Tag.php b/app/Models/Tag.php
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/app/Models/Tag.php
+@@ -0,0 +1,18 @@
++<?php
++
++declare(strict_types=1);
++
++namespace App\Models;
++
++use Illuminate\Database\Eloquent\Model;
++use Illuminate\Database\Eloquent\Relations\BelongsToMany;
++
++final class Tag extends Model
++{
++    protected $table = 'tags';
++
++    public function todos(): BelongsToMany
++    {
++        return $this->belongsToMany(Todo::class);
++    }
++}

@@ -1,0 +1,155 @@
+name: Template Release
+
+# Cria releases versionadas do template quando se faz push duma tag vX.Y.Z.
+# Também valida que a versão na tag coincide com .harness-template-version.
+#
+# Uso:
+#   1. Actualizar .harness-template-version + CHANGELOG.template.md
+#   2. git commit -am "chore: bump template to 2.1.0"
+#   3. git tag v2.1.0 && git push --tags
+#   4. Este workflow corre, cria release no GitHub com changelog extraído
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'  # pré-releases tipo v2.1.0-rc.1
+
+permissions:
+  contents: write    # criar releases
+
+jobs:
+  validate:
+    name: Validar versão e changelog
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      is_prerelease: ${{ steps.extract.outputs.is_prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extrair versão da tag
+        id: extract
+        run: |
+          # v2.1.0 → 2.1.0
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Detectar pré-release pela presença de hífen (rc, beta, alpha)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Tag: $TAG → versão: $VERSION"
+
+      - name: Verificar .harness-template-version
+        run: |
+          FILE_VERSION=$(cat .harness-template-version | tr -d '[:space:]')
+          TAG_VERSION="${{ steps.extract.outputs.version }}"
+
+          if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Versão na tag ($TAG_VERSION) não bate com .harness-template-version ($FILE_VERSION)"
+            echo "::error::Actualiza .harness-template-version antes de fazer tag, ou apaga e refaz a tag."
+            exit 1
+          fi
+          echo "✓ Versão coerente: $TAG_VERSION"
+
+      - name: Verificar entrada no CHANGELOG
+        run: |
+          VERSION="${{ steps.extract.outputs.version }}"
+          if ! grep -q "^## \[$VERSION\]" CHANGELOG.template.md; then
+            echo "::error::CHANGELOG.template.md não tem entrada para [$VERSION]"
+            echo "::error::Adiciona uma secção '## [$VERSION] - YYYY-MM-DD' antes de fazer release."
+            exit 1
+          fi
+          echo "✓ Entrada de changelog encontrada para $VERSION"
+
+  smoke-test:
+    name: Smoke test do template
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validar ficheiros estruturados
+        run: |
+          pip install pyyaml
+          python -c "
+          import yaml, json, glob, sys
+          errors = 0
+          for f in glob.glob('**/*.yml', recursive=True) + glob.glob('**/*.yaml', recursive=True):
+              try: yaml.safe_load(open(f))
+              except Exception as e: errors += 1; print(f'YAML err {f}: {e}')
+          for f in ['composer.json', 'package.json', 'pint.json', 'tsconfig.json']:
+              try: json.load(open(f))
+              except Exception as e: errors += 1; print(f'JSON err {f}: {e}')
+          sys.exit(errors)
+          "
+
+      - name: Validar bash scripts
+        run: |
+          bash -n scripts/init.sh
+          bash -n scripts/pre-commit
+
+      - name: Validar Python scripts
+        run: |
+          for f in scripts/*.py .github/scripts/*.py; do
+            python -m py_compile "$f"
+          done
+
+      - name: Correr init.sh num clone limpo
+        run: |
+          mkdir /tmp/clone-test
+          cp -r . /tmp/clone-test/
+          cd /tmp/clone-test
+          git init -q
+          git -c user.email=ci@test -c user.name=ci add -A
+          git -c user.email=ci@test -c user.name=ci commit -qm "test"
+
+          # Simular respostas do init.sh
+          printf "Smoke Test\nSmoke test project\nOrder\nPostgres\nn\nn\nn\nn\n" | ./scripts/init.sh
+
+          # Confirmar que placeholders foram substituídos
+          if grep -rl "{{PROJECT_NAME}}" . --include="*.md" --include="*.yml" --include="*.json" 2>/dev/null | grep -v examples/; then
+            echo "::error::Placeholders restantes após init.sh"
+            exit 1
+          fi
+          echo "✓ init.sh substituiu tudo correctamente"
+
+  release:
+    name: Criar release
+    runs-on: ubuntu-latest
+    needs: [validate, smoke-test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extrair changelog desta versão
+        id: changelog
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          # Extrai apenas a secção desta versão do CHANGELOG
+          awk -v ver="## \\[$VERSION\\]" '
+            $0 ~ ver { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.template.md > release-notes.md
+
+          echo "=== Release notes ==="
+          cat release-notes.md
+
+      - name: Criar GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Template ${{ github.ref_name }}
+          body_path: release-notes.md
+          prerelease: ${{ needs.validate.outputs.is_prerelease }}
+          generate_release_notes: false

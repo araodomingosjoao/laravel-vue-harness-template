@@ -1,0 +1,8 @@
+expected_decision: reject
+expected_rules_triggered:
+  - 8  # Sem any em TypeScript
+expected_files_flagged:
+  - "resources/js/composables/useTodos.ts"
+description: >
+  Substituiu tipo Todo por `any` em 3 sítios, sem comentário a justificar.
+  Pior: removeu o import do tipo, sugerindo que foi intencional.

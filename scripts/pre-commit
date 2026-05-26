@@ -1,0 +1,42 @@
+#!/bin/sh
+# Pre-commit hook: bloqueia commits com segredos.
+# Instalar com: ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+
+set -e
+
+# Padrões que NUNCA podem aparecer em código commitado
+SECRET_PATTERNS='(AKIA[0-9A-Z]{16}|sk-[a-zA-Z0-9]{32,}|sk-ant-[a-zA-Z0-9-]{32,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]{10,}|-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----)'
+
+# Ficheiros que NUNCA podem ser commitados
+BLOCKED_FILES='\.env$|\.env\.[^e].*$|\.pem$|\.p12$|\.key$|auth\.json$|oauth-.*\.key$'
+
+# 1. Verifica ficheiros bloqueados
+blocked=$(git diff --cached --name-only --diff-filter=A | grep -E "$BLOCKED_FILES" || true)
+if [ -n "$blocked" ]; then
+    echo "❌ Commit bloqueado — ficheiros sensíveis:"
+    echo "$blocked" | sed 's/^/   /'
+    echo ""
+    echo "Adiciona-os ao .gitignore e remove com: git rm --cached <ficheiro>"
+    exit 1
+fi
+
+# 2. Verifica padrões de segredos no conteúdo
+secrets=$(git diff --cached -U0 | grep -E "^\+" | grep -vE "^\+\+\+" | grep -E "$SECRET_PATTERNS" || true)
+if [ -n "$secrets" ]; then
+    echo "❌ Commit bloqueado — padrão de segredo detectado:"
+    echo "$secrets" | head -5 | sed 's/^/   /'
+    echo ""
+    echo "Move o segredo para .env (que está no .gitignore)."
+    echo "Se for falso positivo, usa: git commit --no-verify"
+    exit 1
+fi
+
+# 3. Se tens gitleaks instalado, usa-o como segunda barreira
+if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks protect --staged --no-banner --redact || {
+        echo "❌ gitleaks detectou segredos"
+        exit 1
+    }
+fi
+
+echo "✓ Pre-commit OK"

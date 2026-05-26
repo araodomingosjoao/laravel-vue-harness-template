@@ -1,0 +1,66 @@
+# Allow-list de dependências
+#
+# O agente NÃO pode adicionar packages que não estejam aqui sem aprovação humana.
+# Para propor um novo package: abre PR só com este ficheiro alterado + justificação.
+
+composer:
+  # Framework e core
+  - laravel/framework
+  - laravel/sanctum
+  - laravel/tinker
+
+  # Qualidade
+  - larastan/larastan
+  - laravel/pint
+  - pestphp/pest
+  - pestphp/pest-plugin-laravel
+  - phpunit/phpunit
+  - mockery/mockery
+  - fakerphp/faker
+
+  # Utilitários comuns aprovados
+  - spatie/laravel-permission
+  - spatie/laravel-query-builder
+  - spatie/laravel-data
+  - spatie/laravel-typescript-transformer
+
+npm:
+  # Framework e core
+  - vue
+  - vue-router
+  - pinia
+  - axios
+
+  # Build
+  - vite
+  - "@vitejs/plugin-vue"
+  - typescript
+  - vue-tsc
+
+  # Testes
+  - vitest
+  - "@vitest/coverage-v8"
+  - "@vue/test-utils"
+  - jsdom
+  - "@playwright/test"
+
+  # Lint
+  - eslint
+  - eslint-plugin-vue
+  - "@vue/eslint-config-typescript"
+
+# Packages PROIBIDOS (mesmo se estiverem no allow-list noutra forma)
+blocked:
+  - left-pad           # exemplo: packages abandonados
+  - event-stream       # exemplo: packages com histórico de comprometimento
+
+# Política
+policy:
+  audit_required: true       # composer audit e npm audit têm de passar
+  license_allow_list:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+  max_age_days: 730          # rejeitar packages sem updates há mais de 2 anos

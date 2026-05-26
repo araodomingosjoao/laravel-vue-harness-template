@@ -1,0 +1,187 @@
+# Laravel + Vue harness template
+
+> Template GitHub para projectos Laravel 13 + Vue 3 construídos maioritariamente
+> por agentes de IA (Claude Code, Cursor, etc.) com humano no papel de reviewer.
+
+[![Template version](https://img.shields.io/badge/template-v2.0.0-blue)](CHANGELOG.template.md)
+
+## Para que serve
+
+Se vais construir um projecto Laravel + Vue e queres usar agentes de IA de forma
+**segura e auditável** desde o dia zero, este template dá-te:
+
+- Convenções claras que o agente respeita (`CLAUDE.md`)
+- Sub-agentes especializados em backend e frontend
+- Sensores que apanham bugs antes do PR (PHPStan, Pint, Pest, vue-tsc, ESLint, Vitest)
+- AI review com rubrica de 12 regras semânticas
+- Kill switch e budgets para limitar danos quando algo correr mal
+- Eval set e chaos tests para detectar regressões
+- Trajectory logging para perceber o que o agente realmente fez
+- Dashboard de saúde do harness
+
+Não é "demo bonita". É production-grade.
+
+## Começar
+
+### 1. Criar um projecto a partir deste template
+
+No GitHub: clica em **"Use this template"** → **"Create a new repository"**.
+
+Ou via CLI com a [GitHub CLI](https://cli.github.com/):
+```bash
+gh repo create meu-projecto --template araodomingosjoao/laravel-vue-harness-template --private
+```
+
+### 2. Inicializar
+
+```bash
+cd meu-projecto
+./scripts/init.sh
+```
+
+O script faz 4 perguntas curtas e prepara tudo. Demora menos de um minuto.
+
+### 3. Instalar dependências
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+```
+
+### 4. Levantar o sandbox
+
+```bash
+docker-compose up -d
+docker-compose exec app php artisan migrate
+```
+
+### 5. Configurar o CI
+
+No GitHub do teu projecto: **Settings → Secrets and variables → Actions →
+New repository secret**: `ANTHROPIC_API_KEY`.
+
+### 6. Validar que tudo funciona
+
+```bash
+composer gates && npm run gates
+python scripts/dashboard.py
+```
+
+Se ambos passam, estás pronto para começar a pedir features ao agente.
+
+## Stack assumida
+
+| Camada | Tecnologia | Versão |
+|---|---|---|
+| Backend | Laravel | 13 |
+| PHP | | 8.4 |
+| Base de dados | PostgreSQL | 18 |
+| Frontend | Vue + TypeScript | 3.5 + 6 |
+| Bundler | Vite | 8 |
+| Testes BE | Pest | 4 |
+| Testes FE | Vitest | 4 |
+| E2E | Playwright | 1.60+ |
+| Análise estática | PHPStan + Larastan | level 8 (Larastan 3) |
+| Style | Pint | preset Laravel |
+
+> **Princípio: segue sempre as últimas versões estáveis.** Este template
+> referencia as versões estáveis mais recentes de cada componente da stack. Ao
+> actualizar, sobe para a última major estável (não fiques preso a versões
+> antigas "porque sim") e corre `composer gates && npm run gates` antes de
+> assumir que está tudo bem. As versões acima reflectem o estado em 2026-05.
+
+Se queres uma stack diferente, faz fork e adapta. O template não tenta ser
+agnóstico — é deliberadamente focado.
+
+## Estrutura
+
+```
+.
+├── CLAUDE.md                 # Convenções do projecto (lido pelo agente)
+├── LEARNINGS.md              # Memória volátil entre sessões
+├── README.md                 # Este ficheiro (no projecto novo, substitui-o)
+├── CHANGELOG.template.md     # Versões do template
+├── .harness-template-version # Versão actual do template usado
+│
+├── .claude/agents/           # Sub-agentes especializados
+│   ├── spec-writer.md
+│   ├── laravel-backend.md
+│   └── vue-frontend.md
+│
+├── .github/                  # CI/CD, templates de issues e PRs
+│   ├── workflows/agent-pr.yml
+│   ├── scripts/ai_review.py
+│   ├── ISSUE_TEMPLATE/
+│   └── PULL_REQUEST_TEMPLATE.md
+│
+├── config/harness/           # Política do harness
+│   ├── policy.yml            # Budgets, rate limits, kill switch, risco
+│   └── dependencies.yml      # Allow-list de packages
+│
+├── scripts/                  # Ferramentas operacionais
+│   ├── init.sh               # Bootstrap interactivo
+│   ├── pre-commit            # Detecção de segredos
+│   ├── budget_check.py       # Enforcement de budgets
+│   ├── classify_risk.py      # Risco por path
+│   ├── trajectory.py         # Logging estruturado
+│   ├── dashboard.py          # Métricas
+│   ├── eval.py               # Eval set runner
+│   ├── chaos_test.py         # Calibração de sensores
+│   └── check_dependencies.py # Allow-list enforcement
+│
+├── docs/
+│   ├── adr/                  # Architecture Decision Records
+│   ├── handoffs/             # Contrato backend → frontend
+│   └── template/             # Documentação do template em si
+│       ├── PHILOSOPHY.md
+│       └── UPGRADE.md
+│
+├── tests/harness/
+│   ├── eval-set/             # Tasks-padrão para benchmark
+│   └── bad-prs/              # Chaos tests para AI review
+│
+├── examples/                 # APAGADO pelo init.sh — exemplos só do template
+│   ├── eval-tasks/
+│   ├── bad-prs/
+│   ├── adrs/
+│   └── learnings/
+│
+├── phpstan.neon              # Larastan level 8
+├── pint.json                 # Style PHP
+├── composer.json             # Scripts: gates, test, lint
+├── package.json              # Scripts: gates, test, typecheck
+└── docker-compose.yml        # Sandbox isolado
+```
+
+## Próximos passos depois do init
+
+Lê estes ficheiros, por esta ordem:
+
+1. **`CLAUDE.md`** — entende as convenções que o agente vai seguir
+2. **`docs/template/PHILOSOPHY.md`** — entende porque as decisões foram feitas assim
+3. **`config/harness/policy.yml`** — ajusta budgets se o defaults não te servem
+4. **`examples/eval-tasks/add-priority-field/`** — exemplo completo de eval task
+
+Depois adapta:
+
+- **`CLAUDE.md`** → preenche a secção "Modelo de dados" com as tuas entidades
+- **`docs/adr/`** → começa a registar decisões arquitecturais à medida que as tomas
+- **`tests/harness/eval-set/`** → cria a tua primeira eval task baseada num caso real
+
+## Manutenção do template
+
+Quando este template recebe updates, o teu projecto **não** os recebe automaticamente.
+Vê [`docs/template/UPGRADE.md`](docs/template/UPGRADE.md) para o processo.
+
+## Filosofia em uma linha
+
+> O agente escreve código. Os sensores validam. O humano aprova o que importa.
+
+Para mais detalhe sobre as decisões de design, vê
+[`docs/template/PHILOSOPHY.md`](docs/template/PHILOSOPHY.md).
+
+## Licença
+
+MIT.
