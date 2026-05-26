@@ -24,6 +24,18 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 ### Adicionado
 - Secção "Convenções de commits" no `CLAUDE.md` — Conventional Commits, em inglês, sem rodapés de co-autoria
 - Princípio "segue sempre as últimas versões estáveis" no `CLAUDE.md` e no `README.md`
+- Job `security-review` com a action oficial `anthropics/claude-code-security-review`
+
+### Mudou
+- AI review do CI migrado do `ai_review.py` (rubrica custom de 12 regras) para a
+  action oficial `anthropics/claude-code-action@v1`: repo-aware, comenta inline,
+  e usa o `CLAUDE.md` como rubrica (fonte de verdade única, sem drift)
+
+### Corrigido
+- `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch`
+  porque `github.base_ref` está vazio fora de PRs. O script tornou-se resiliente
+  (base inválida/SHA nulo/primeiro commit → risco "low") e o workflow passa a usar
+  `HEAD~1` como base nesses eventos.
 
 ## [2.0.0] - 2026-05-26
 

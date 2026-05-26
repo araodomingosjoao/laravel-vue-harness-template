@@ -22,11 +22,29 @@ RISK_ORDER = ["critical", "high", "medium", "low"]
 
 
 def changed_files(base_ref: str = "origin/main") -> list[str]:
-    """Lista ficheiros alterados vs base ref."""
+    """Lista ficheiros alterados vs base ref.
+
+    Resiliente: se o base ref estiver vazio, for o SHA nulo (push inicial),
+    ou o git falhar (ex.: primeiro commit sem parent, branch não fetchada),
+    devolve [] em vez de rebentar — o caller trata isso como risco "low".
+    """
+    base_ref = (base_ref or "").strip()
+    null_ref = base_ref.rsplit("/", 1)[-1].strip("0") == ""
+    if not base_ref or null_ref:
+        print(f"classify_risk: base ref inválido ('{base_ref}') — sem diff", file=sys.stderr)
+        return []
+
     result = subprocess.run(
         ["git", "diff", "--name-only", f"{base_ref}...HEAD"],
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True,
     )
+    if result.returncode != 0:
+        print(
+            f"classify_risk: não consegui fazer diff contra '{base_ref}' "
+            f"({result.stderr.strip()}) — a tratar como sem alterações",
+            file=sys.stderr,
+        )
+        return []
     return [f for f in result.stdout.splitlines() if f.strip()]
 
 

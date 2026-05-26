@@ -13,7 +13,7 @@ Se vais construir um projecto Laravel + Vue e queres usar agentes de IA de forma
 - Convenções claras que o agente respeita (`CLAUDE.md`)
 - Sub-agentes especializados em backend e frontend
 - Sensores que apanham bugs antes do PR (PHPStan, Pint, Pest, vue-tsc, ESLint, Vitest)
-- AI review com rubrica de 12 regras semânticas
+- AI review + security review via GitHub Actions oficiais do Claude Code (comentários inline no PR, rubrica = o teu `CLAUDE.md`)
 - Kill switch e budgets para limitar danos quando algo correr mal
 - Eval set e chaos tests para detectar regressões
 - Trajectory logging para perceber o que o agente realmente fez
