@@ -22,7 +22,7 @@ tentação de oferecer 20 opções porque:
 
 ## 3. Production-grade por defeito, não "starter"
 
-O template inclui kill switch, budgets, eval set, chaos tests — coisas que
+O template inclui kill switch, budgets, eval set — coisas que
 um projecto novo "não precisa ainda". Mas adicionar isto depois é trabalhoso
 e quase ninguém o faz. Pré-incluir torna trivial usar; quem não quiser desliga.
 
@@ -69,8 +69,8 @@ surpresas no fim do mês. Mostrar leva a decisões informadas.
 ## Quando propor mudanças ao template
 
 Mudanças bem-vindas:
-- ✓ Mais sensores inferenciais (regras na rubrica do AI review)
-- ✓ Mais tasks no eval set ou bad-prs
+- ✓ Afinar o prompt/instruções do AI review (`anthropics/claude-code-action`)
+- ✓ Mais tasks no eval set
 - ✓ Correcções a falsos positivos dos sensores
 - ✓ Melhorias ao `init.sh`
 - ✓ Sub-agentes especializados em áreas específicas (ex: migrations complexas, auth)

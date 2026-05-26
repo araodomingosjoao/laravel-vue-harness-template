@@ -15,7 +15,7 @@ Se vais construir um projecto Laravel + Vue e queres usar agentes de IA de forma
 - Sensores que apanham bugs antes do PR (PHPStan, Pint, Pest, vue-tsc, ESLint, Vitest)
 - AI review + security review via GitHub Actions oficiais do Claude Code (comentários inline no PR, rubrica = o teu `CLAUDE.md`)
 - Kill switch e budgets para limitar danos quando algo correr mal
-- Eval set e chaos tests para detectar regressões
+- Eval set para detectar regressões
 - Trajectory logging para perceber o que o agente realmente fez
 - Dashboard de saúde do harness
 
@@ -114,7 +114,6 @@ agnóstico — é deliberadamente focado.
 │
 ├── .github/                  # CI/CD, templates de issues e PRs
 │   ├── workflows/agent-pr.yml
-│   ├── scripts/ai_review.py
 │   ├── ISSUE_TEMPLATE/
 │   └── PULL_REQUEST_TEMPLATE.md
 │
@@ -130,7 +129,6 @@ agnóstico — é deliberadamente focado.
 │   ├── trajectory.py         # Logging estruturado
 │   ├── dashboard.py          # Métricas
 │   ├── eval.py               # Eval set runner
-│   ├── chaos_test.py         # Calibração de sensores
 │   └── check_dependencies.py # Allow-list enforcement
 │
 ├── docs/
@@ -141,12 +139,10 @@ agnóstico — é deliberadamente focado.
 │       └── UPGRADE.md
 │
 ├── tests/harness/
-│   ├── eval-set/             # Tasks-padrão para benchmark
-│   └── bad-prs/              # Chaos tests para AI review
+│   └── eval-set/             # Tasks-padrão para benchmark
 │
 ├── examples/                 # APAGADO pelo init.sh — exemplos só do template
 │   ├── eval-tasks/
-│   ├── bad-prs/
 │   ├── adrs/
 │   └── learnings/
 │

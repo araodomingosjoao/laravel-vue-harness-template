@@ -36,7 +36,6 @@ Closes #...
 
 ### Se mudaste algo no harness
 - [ ] Eval set corrido para detectar regressão do agente
-- [ ] Chaos test corrido para detectar regressão dos sensores
 - [ ] `CHANGELOG.template.md` actualizado (se for melhoria genérica)
 
 ## Para o reviewer humano

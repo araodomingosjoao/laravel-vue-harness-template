@@ -105,9 +105,6 @@ python scripts/eval.py run --all
 python scripts/eval.py compare \
   --baseline tests/harness/eval-set/results/<antes-do-upgrade>.json \
   --current tests/harness/eval-set/results/<depois>.json
-
-# Chaos test (confirma que os sensores inferenciais continuam afinados)
-python scripts/chaos_test.py
 ```
 
 ## 5. Documentar o upgrade

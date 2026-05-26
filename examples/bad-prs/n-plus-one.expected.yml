@@ -1,8 +1,0 @@
-expected_decision: reject
-expected_rules_triggered:
-  - 1  # Não há N+1 queries
-expected_files_flagged:
-  - "app/Http/Controllers/Api/TodoController.php"
-description: >
-  Removeu o eager loading `->with('tags')` e adicionou um foreach que
-  acede a `$todo->tags` — clássico N+1 disfarçado de "optimização".

@@ -29,6 +29,5 @@ O que está a acontecer.
 ## Sinais para o harness
 Se este bug devia ter sido apanhado pelos sensores:
 - [ ] Adicionar caso ao eval set (em `tests/harness/eval-set/`)
-- [ ] Adicionar bad-PR ao chaos test (em `tests/harness/bad-prs/`)
-- [ ] Refinar rubrica do AI review (em `.github/scripts/ai_review.py`)
+- [ ] Afinar o prompt do AI review (job `code-review` no `agent-pr.yml`)
 - [ ] Adicionar entrada ao `LEARNINGS.md`

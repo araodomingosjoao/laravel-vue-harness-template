@@ -6,7 +6,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 6 * * 1'    # segundas às 6h UTC: chaos + eval
+    - cron: '0 6 * * 1'    # segundas às 6h UTC: eval set
   workflow_dispatch:        # manual trigger
 
 concurrency:
@@ -303,24 +303,6 @@ jobs:
           pnpm run dev &
           sleep 5
       - run: pnpm exec playwright test
-
-  # ─────────────────────────────────────────────────────────────
-  # CHAOS TEST (semanal)
-  # ─────────────────────────────────────────────────────────────
-  chaos-test:
-    name: Chaos test (sensor calibration)
-    runs-on: ubuntu-latest
-    if: github.event.schedule || github.event_name == 'workflow_dispatch'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install anthropic pyyaml
-      - name: Run chaos tests
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python scripts/chaos_test.py
 
   # ─────────────────────────────────────────────────────────────
   # EVAL SET (semanal)

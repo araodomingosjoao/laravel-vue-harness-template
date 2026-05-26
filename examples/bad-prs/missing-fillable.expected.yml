@@ -1,7 +1,0 @@
-expected_decision: reject
-expected_rules_triggered:
-  - 2  # Models novos têm $fillable explícito
-expected_files_flagged:
-  - "app/Models/Tag.php"
-description: >
-  Model novo `Tag` sem `$fillable`. Permite mass assignment de qualquer coluna.

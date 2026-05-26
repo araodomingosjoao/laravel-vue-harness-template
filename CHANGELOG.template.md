@@ -30,10 +30,14 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - Princípio "segue as últimas versões estáveis que o ecossistema suporta" no `CLAUDE.md` e no `README.md`
 - Job `security-review` com a action oficial `anthropics/claude-code-security-review`
 - `.gitignore` padrão do Laravel em `bootstrap/cache` e `storage/*` (um clone fresco arranca sem passos manuais)
+- Smoke test Playwright (`tests/e2e/smoke.spec.ts`) + `playwright.config.ts` — o job e2e não tinha specs e falhava em qualquer PR de risco ≥ medium
 
 ### Corrigido
 - `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch` porque `github.base_ref` está vazio fora de PRs — agora é resiliente e o workflow usa `HEAD~1` como base nesses eventos
 - Template passa agora os próprios gates: `App.vue` válido antes do `init.sh`, `tsconfig` sem `baseUrl` (TS 6), `phpstan.neon` compatível com PHPStan 2, e Pest do CI sem o gate de 80% de cobertura (impossível num esqueleto)
+
+### Removido
+- Subsistema da rubrica custom de AI review — `ai_review.py`, `chaos_test.py`, o job `chaos-test` e os fixtures `bad-prs/`. Substituído pela action oficial; calibrar uma rubrica que já não está no pipeline não fazia sentido
 
 ## [2.0.0] - 2026-05-26
 

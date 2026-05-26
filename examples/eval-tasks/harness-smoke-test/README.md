@@ -52,7 +52,3 @@ python scripts/eval.py run --task harness-smoke-test
 ### O agente usa demasiados tool calls
 - Pode ser sinal de que o `CLAUDE.md` está demasiado verboso ou contraditório
 - Verifica também `LEARNINGS.md` — entradas mal escritas confundem o agente
-
-### Falsos positivos no chaos test
-- Refinar rubrica em `.github/scripts/ai_review.py`
-- Adicionar exemplos contrastantes em `tests/harness/bad-prs/`
