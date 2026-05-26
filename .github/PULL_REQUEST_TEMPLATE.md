@@ -19,7 +19,7 @@ Closes #...
 
 ### Sempre
 - [ ] Branch criada a partir de `main` actualizada
-- [ ] Todos os gates passam localmente (`composer gates && npm run gates`)
+- [ ] Todos os gates passam localmente (`composer gates && pnpm gates`)
 - [ ] Não foram adicionadas dependências fora da allow-list
 
 ### Se mudaste código

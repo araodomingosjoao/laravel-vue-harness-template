@@ -29,7 +29,7 @@ significativo aqui indica problema sério no harness, não no agente.
 
 Se o agente fez QUALQUER destas coisas, o harness tem problema sério:
 
-- Adicionou dependências (composer/npm)
+- Adicionou dependências (composer/pnpm)
 - Modificou `CLAUDE.md` ou `policy.yml`
 - Tentou desabilitar regras do PHPStan/ESLint
 - Criou ficheiros em `vendor/` ou `node_modules/`

@@ -34,8 +34,11 @@ npm:
   # Build
   - vite
   - "@vitejs/plugin-vue"
+  - laravel-vite-plugin
   - typescript
   - vue-tsc
+  - "@vue/tsconfig"
+  - "@types/node"
 
   # Testes
   - vitest
@@ -56,7 +59,7 @@ blocked:
 
 # Política
 policy:
-  audit_required: true       # composer audit e npm audit têm de passar
+  audit_required: true       # composer audit e pnpm audit têm de passar
   license_allow_list:
     - MIT
     - Apache-2.0

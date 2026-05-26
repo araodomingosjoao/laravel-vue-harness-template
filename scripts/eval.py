@@ -74,9 +74,9 @@ def check_hard_gates(task: dict, run_result: dict) -> dict:
         "phpstan_passes": ["./vendor/bin/phpstan", "analyse", "--no-progress"],
         "pint_clean": ["./vendor/bin/pint", "--test"],
         "pest_passes": ["./vendor/bin/pest", "--parallel"],
-        "vitest_passes": ["npm", "run", "test"],
-        "vue_tsc_clean": ["npm", "run", "typecheck"],
-        "build_succeeds": ["npm", "run", "build"],
+        "vitest_passes": ["pnpm", "run", "test"],
+        "vue_tsc_clean": ["pnpm", "run", "typecheck"],
+        "build_succeeds": ["pnpm", "run", "build"],
     }
 
     for gate_name, expected in gates.items():

@@ -20,16 +20,18 @@ Lê-o antes de qualquer task. Se uma instrução aqui conflituar com o prompt do
 
 ## Stack
 
-- **Backend**: Laravel 13, PHP 8.4, {{DATABASE}}
+- **Backend**: Laravel 12, PHP 8.4, {{DATABASE}}
 - **Frontend**: Vue 3 (Composition API), TypeScript, Pinia, Vite
 - **Testes**: Pest (backend), Vitest + Vue Test Utils (frontend), Playwright (e2e)
 - **Qualidade**: PHPStan/Larastan level 8, Pint, ESLint, vue-tsc
 
-> **Segue sempre as últimas versões estáveis.** Ao adicionar ou actualizar
-> dependências, usa a última major estável de cada pacote (verifica em
-> packagist.org / npmjs.com) e nunca introduzas uma versão mais antiga sem
-> justificação. Confirma sempre com `composer gates && npm run gates` depois de
-> mexer em versões. A base de dados é **PostgreSQL** — não MySQL.
+> **Segue as últimas versões estáveis que o ecossistema suporta.** Ao adicionar
+> ou actualizar dependências, usa a versão estável mais recente que **resolve e
+> passa os gates** (verifica em packagist.org / npmjs.com). "Última" não é
+> bleeding-edge a todo o custo: se uma major nova ainda não tem suporte das
+> dependências, fica na anterior até resolver. Confirma sempre com
+> `composer gates && pnpm gates` depois de mexer em versões. A base de dados é
+> **PostgreSQL** (não MySQL) e o gestor de pacotes do frontend é **pnpm** (não npm).
 
 ## Estrutura do repo
 
@@ -116,14 +118,14 @@ Se o pedido for vago, **invoca primeiro o sub-agente `spec-writer`**. Não inven
 5. **Corre os sensores antes de declarar terminado**:
    ```bash
    composer gates
-   npm run gates
+   pnpm gates
    ```
 6. **Se algum sensor falhar, arranja antes de avançar.** Não abras PR com testes vermelhos.
 
 ## Antes de fazer commit
 
 - Pre-commit hook em `scripts/pre-commit` apanha segredos
-- Corre `composer gates && npm run gates` para validar tudo localmente
+- Corre `composer gates && pnpm gates` para validar tudo localmente
 - Se vais adicionar uma dependência, verifica `config/harness/dependencies.yml` primeiro
 - Mensagem de commit no formato Conventional Commits (ver "Convenções de commits")
 
@@ -139,7 +141,7 @@ php artisan tinker                        # REPL para experimentar queries
 
 # Qualidade
 composer gates                            # Pint + PHPStan + Pest
-npm run gates                             # typecheck + lint + vitest
+pnpm gates                                # typecheck + lint + vitest
 ```
 
 ## Convenções de naming
@@ -177,7 +179,7 @@ Formato:
 - `refactor` — mudança de código que não corrige bug nem adiciona feature
 - `perf` — melhoria de performance
 - `test` — adicionar ou corrigir testes
-- `build` — build ou dependências (composer, npm, Vite, Docker)
+- `build` — build ou dependências (composer, pnpm, Vite, Docker)
 - `ci` — alterações ao CI (`.github/workflows`)
 - `chore` — manutenção sem impacto em código de produção ou testes
 

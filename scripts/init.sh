@@ -220,7 +220,7 @@ ${BOLD}Próximos passos:${RESET}
   1. ${DIM}Editar CLAUDE.md${RESET} → secção "Modelo de dados" e "Domínio"
   2. ${DIM}Editar .env${RESET} → cp .env.example .env e preencher
   3. ${DIM}Configurar secret no GitHub${RESET} → Settings → Secrets → ANTHROPIC_API_KEY
-  4. ${DIM}Instalar dependências${RESET} → composer install && npm install
+  4. ${DIM}Instalar dependências${RESET} → composer install && pnpm install
   5. ${DIM}Levantar sandbox${RESET} → docker-compose up -d
   6. ${DIM}Criar primeiro ADR${RESET} → cp examples/adrs/*.md docs/adr/001-... (se mantiveste examples/)
   7. ${DIM}Adicionar primeira eval task${RESET} → ver examples/eval-tasks/

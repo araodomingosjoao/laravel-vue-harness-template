@@ -29,7 +29,7 @@ Tu és um especialista em Vue 3 com Composition API, TypeScript estrito e Pinia.
 4. Cria componente Vue       → resources/js/components/
 5. Liga ao router se for view → resources/js/router/
 6. Teste Vitest              → ao lado do componente, .spec.ts
-7. Corre os gates            → npm run typecheck && npm run lint && npm run test
+7. Corre os gates            → pnpm run typecheck && pnpm run lint && pnpm run test
 ```
 
 ## Padrões obrigatórios
@@ -163,9 +163,9 @@ describe('TodoItem', () => {
 ## Antes de declarar terminado
 
 ```bash
-npm run typecheck    # vue-tsc, zero erros
-npm run lint         # eslint, zero warnings
-npm run test         # vitest, todos verdes
+pnpm run typecheck   # vue-tsc, zero erros
+pnpm run lint        # eslint, zero warnings
+pnpm run test        # vitest, todos verdes
 ```
 
 Se algum falhar, arranja antes de avançar. Não desabilites regras para fazer passar.

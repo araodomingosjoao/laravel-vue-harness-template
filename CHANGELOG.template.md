@@ -18,8 +18,10 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 
 ### Mudou
 - Base de dados passou de MySQL para **PostgreSQL 18** (`docker-compose.yml`, serviços do CI, `config/database.php`, `.env.example`, default do `init.sh`)
-- Stack actualizada para as últimas versões estáveis: Laravel 13, PHP 8.4, Vue 3.5, Vite 8, Vitest 4, Pest 4, Larastan 3, ESLint 10, TypeScript 6, Pinia 3, Node 24, Playwright 1.60
+- Gestor de pacotes do frontend passou de **npm para pnpm** (`packageManager` no `package.json`, `pnpm/action-setup` no CI, `corepack` no docker-compose, docs e agentes)
+- Stack actualizada para as últimas versões estáveis que o ecossistema suporta: Laravel 12, PHP 8.4, Vue 3.5, Vite 8, Vitest 4, Pest 4, Larastan 3, ESLint 10, TypeScript 6, Pinia 3, Node 24, Playwright 1.60 (Laravel 13 ainda não resolve — `tinker`/plugins capam em 12)
 - `eslint.config.js` migrado para a API `defineConfigWithVueTs` (`@vue/eslint-config-typescript` v14)
+- Lock files (`composer.lock`, `pnpm-lock.yaml`) passam a ser commitados; o CI usa `--frozen-lockfile`
 
 ### Adicionado
 - Secção "Convenções de commits" no `CLAUDE.md` — Conventional Commits, em inglês, sem rodapés de co-autoria

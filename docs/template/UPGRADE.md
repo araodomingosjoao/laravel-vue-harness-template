@@ -47,7 +47,7 @@ git log template/main --oneline
 git cherry-pick <commit-hash>
 
 # 3. Resolver conflitos se houver, testar
-composer gates && npm run gates
+composer gates && pnpm gates
 
 # 4. Actualizar versão
 echo "2.1.0" > .harness-template-version
@@ -88,8 +88,8 @@ cp ../projecto-antigo/.env .
 # CLAUDE.md, LEARNINGS.md, ADRs — copiar e adaptar
 
 # 4. Correr gates para confirmar
-composer install && npm install
-composer gates && npm run gates
+composer install && pnpm install
+composer gates && pnpm gates
 ```
 
 ## 4. Validar que o upgrade não partiu nada
@@ -98,7 +98,7 @@ Antes de fazer merge:
 
 ```bash
 # Sensores locais
-composer gates && npm run gates
+composer gates && pnpm gates
 
 # Eval set (detecta regressão do agente após mudanças no harness)
 python scripts/eval.py run --all

@@ -3,6 +3,7 @@
     "description": "{{PROJECT_DESCRIPTION}}",
     "private": true,
     "type": "module",
+    "packageManager": "pnpm@11.3.0",
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc --noEmit && vite build",
@@ -14,7 +15,7 @@
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
         "test:e2e": "playwright test",
-        "gates": "npm run typecheck && npm run lint && npm run test"
+        "gates": "pnpm run typecheck && pnpm run lint && pnpm run test"
     },
     "dependencies": {
         "axios": "^1.7.0",

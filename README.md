@@ -1,6 +1,6 @@
 # Laravel + Vue harness template
 
-> Template GitHub para projectos Laravel 13 + Vue 3 construídos maioritariamente
+> Template GitHub para projectos Laravel 12 + Vue 3 construídos maioritariamente
 > por agentes de IA (Claude Code, Cursor, etc.) com humano no papel de reviewer.
 
 [![Template version](https://img.shields.io/badge/template-v2.1.0-blue)](CHANGELOG.template.md)
@@ -45,7 +45,7 @@ O script faz 4 perguntas curtas e prepara tudo. Demora menos de um minuto.
 
 ```bash
 composer install
-npm install
+pnpm install
 cp .env.example .env
 php artisan key:generate
 ```
@@ -65,7 +65,7 @@ New repository secret**: `ANTHROPIC_API_KEY`.
 ### 6. Validar que tudo funciona
 
 ```bash
-composer gates && npm run gates
+composer gates && pnpm gates
 python scripts/dashboard.py
 ```
 
@@ -75,7 +75,7 @@ Se ambos passam, estás pronto para começar a pedir features ao agente.
 
 | Camada | Tecnologia | Versão |
 |---|---|---|
-| Backend | Laravel | 13 |
+| Backend | Laravel | 12 |
 | PHP | | 8.4 |
 | Base de dados | PostgreSQL | 18 |
 | Frontend | Vue + TypeScript | 3.5 + 6 |
@@ -86,11 +86,13 @@ Se ambos passam, estás pronto para começar a pedir features ao agente.
 | Análise estática | PHPStan + Larastan | level 8 (Larastan 3) |
 | Style | Pint | preset Laravel |
 
-> **Princípio: segue sempre as últimas versões estáveis.** Este template
-> referencia as versões estáveis mais recentes de cada componente da stack. Ao
-> actualizar, sobe para a última major estável (não fiques preso a versões
-> antigas "porque sim") e corre `composer gates && npm run gates` antes de
-> assumir que está tudo bem. As versões acima reflectem o estado em 2026-05.
+> **Princípio: segue as últimas versões estáveis _que o ecossistema suporta_.**
+> Referencia as versões estáveis mais recentes que **resolvem e passam os gates**.
+> "Última" não é "bleeding edge a todo o custo": se uma major nova ainda não tem
+> suporte das dependências (ex.: um pacote first-party que ainda capa na major
+> anterior), fica na anterior até resolver — foi por isso que ficámos em Laravel
+> 12 e não 13. Corre sempre `composer gates && pnpm gates` antes de assumir que um
+> bump está bem. As versões acima reflectem o estado em 2026-05.
 
 Se queres uma stack diferente, faz fork e adapta. O template não tenta ser
 agnóstico — é deliberadamente focado.
