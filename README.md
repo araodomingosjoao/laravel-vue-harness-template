@@ -79,12 +79,18 @@ secret** como `CLAUDE_CODE_OAUTH_TOKEN`. Este token serve o `ai-review` e o
 > (platform.claude.com → Limits/Billing) — é o único tecto fiável. O `eval-set` na
 > subscrição é limitado pela tua quota, não pelos $.
 
-**Implementação conduzida pelo agente (`claude.yml`).** Menciona `@claude` num
-issue ou comentário de PR (ex.: *"@claude adiciona um endpoint GET /api/ping"*) e
-o agente implementa numa branch e abre/atualiza o PR, na tua subscrição. Para que
-o PR do agente **dispare automaticamente** o `agent-pr.yml` (gates + reviews),
-instala o **Claude GitHub App** no repo (github.com/apps/claude, ou `/install-github-app`
-no Claude Code) — um PR aberto pelo `GITHUB_TOKEN` não dispara outros workflows.
+**Claude GitHub App — obrigatório para os jobs de IA.** Instala o app em
+github.com/apps/claude (ou `/install-github-app` no Claude Code) e seleciona o
+repo. A `claude-code-action` (usada pelo `ai-review` e pelo `claude.yml`) troca
+por um token de app para agir no GitHub — **sem o app, esses jobs falham** com
+*"Claude Code is not installed on this repository"*. Instalá-lo também faz os PRs
+do agente dispararem o `agent-pr.yml` (um PR aberto só pelo `GITHUB_TOKEN` não
+dispara outros workflows).
+
+**Implementação conduzida pelo agente (`claude.yml`).** Com o app instalado,
+menciona `@claude` num issue ou comentário de PR (ex.: *"@claude adiciona um
+endpoint GET /api/ping"*) → o agente implementa numa branch e abre/atualiza o PR,
+na tua subscrição; os gates + reviews validam-no.
 
 ### 6. Validar que tudo funciona
 
