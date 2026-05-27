@@ -118,17 +118,25 @@ def run_agent(task: dict) -> dict:
                               error=f"output do agente não-parseável: {proc.stdout[:300]}")
 
         usage = data.get("usage") or {}
-        status = subprocess.run(git + ["status", "--porcelain"], capture_output=True, text=True).stdout
+        # `git add -A` + diff vs baseline lista cada ficheiro individualmente —
+        # `git status --porcelain` colapsa diretórios novos e esconde os ficheiros lá dentro.
+        subprocess.run(git + ["add", "-A"], capture_output=True)
+        name_status = subprocess.run(
+            git + ["diff", "--cached", "--name-status", "HEAD"], capture_output=True, text=True
+        ).stdout
         created, modified, deleted = [], [], []
-        for line in status.splitlines():
-            code, path = line[:2].strip(), line[3:].strip()
-            if code in ("A", "??"):
+        for line in name_status.splitlines():
+            parts = line.split("\t")
+            if len(parts) < 2:
+                continue
+            st, path = parts[0], parts[-1]
+            if st.startswith("A"):
                 created.append(path)
-            elif code == "D":
+            elif st.startswith("D"):
                 deleted.append(path)
             else:
                 modified.append(path)
-        diff = subprocess.run(git + ["diff", "HEAD"], capture_output=True, text=True).stdout
+        diff = subprocess.run(git + ["diff", "--cached", "HEAD"], capture_output=True, text=True).stdout
 
         return {
             "tool_calls": data.get("num_turns", 0),
