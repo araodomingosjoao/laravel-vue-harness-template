@@ -7,7 +7,7 @@ it('returns pong on GET /api/ping', function () {
         ->assertOk()
         ->assertExactJson(['pong' => true]);
         ->assertExactJson(['pong' => true]);
-})->with([]);
+});
 
 it('rejects non-GET methods on GET /api/ping', function () {
     $this->postJson('/api/ping')->assertStatus(405);
