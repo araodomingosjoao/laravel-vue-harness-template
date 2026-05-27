@@ -38,6 +38,7 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 ### Corrigido
 - `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch` porque `github.base_ref` está vazio fora de PRs — agora é resiliente e o workflow usa `HEAD~1` como base nesses eventos
 - Template passa agora os próprios gates: `App.vue` válido antes do `init.sh`, `tsconfig` sem `baseUrl` (TS 6), `phpstan.neon` compatível com PHPStan 2, e Pest do CI sem o gate de 80% de cobertura (impossível num esqueleto)
+- Define o rate limiter `api` no `AppServiceProvider` — sem ele, as rotas de `routes/api.php` (com `throttle:api`) rebentavam com `MissingRateLimiterException` (HTTP 500)
 
 ### Removido
 - Subsistema da rubrica custom de AI review — `ai_review.py`, `chaos_test.py`, o job `chaos-test` e os fixtures `bad-prs/`. Substituído pela action oficial; calibrar uma rubrica que já não está no pipeline não fazia sentido
