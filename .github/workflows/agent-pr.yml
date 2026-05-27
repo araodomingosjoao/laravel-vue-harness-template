@@ -220,6 +220,9 @@ jobs:
         if: steps.creds.outputs.enabled == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Rever PRs/commits do bot do agente — senão a action bloqueia runs
+          # iniciados por bots. Podes restringir a bots específicos (ex.: "claude").
+          allowed_bots: "*"
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
