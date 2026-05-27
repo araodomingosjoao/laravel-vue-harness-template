@@ -119,9 +119,11 @@ saltado mas exigido bloquearia o PR para sempre. Informam o revisor, não o bloq
 ```bash
 composer gates && pnpm gates
 python scripts/dashboard.py
+# o harness valida os próprios scripts (também corre no CI):
+pip install -r requirements-dev.txt && ruff check scripts/ && mypy scripts/ && pytest tests/harness
 ```
 
-Se ambos passam, estás pronto para começar a pedir features ao agente.
+Se tudo passa, estás pronto para começar a pedir features ao agente.
 
 O dashboard é o teu cockpit local. Os dados chegam de três sítios: `eval.py`
 (custo/tokens/duração reais por task), `sync_activity.py` (atividade do `@claude`

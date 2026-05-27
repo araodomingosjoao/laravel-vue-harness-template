@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -33,6 +33,10 @@ ROOT = Path(__file__).parent.parent
 EVAL_DIR = ROOT / "tests" / "harness" / "eval-set"
 RESULTS_DIR = EVAL_DIR / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Baseline commitado (NÃO em results/, que é gitignored): a barra "known-good".
+# Atualizar é um acto humano deliberado (`--update-baseline` + commit).
+BASELINE_FILE = EVAL_DIR / "baseline.json"
 
 POLICY_FILE = ROOT / "config" / "harness" / "policy.yml"
 
@@ -80,9 +84,9 @@ def run_agent(task: dict) -> dict:
     sandbox isolado, e captura métricas + diff. Usa a auth local do `claude`:
     a subscrição logada (local) ou CLAUDE_CODE_OAUTH_TOKEN (CI).
 
-    O sandbox é uma cópia dos ficheiros tracked do repo (vendor/node_modules são
-    symlinked para os gates poderem correr). A diff é obtida via git contra um
-    commit baseline. Degrada com mensagem clara se o CLI `claude` não existir.
+    O sandbox é uma cópia dos ficheiros tracked do repo (vendor é copiado e
+    node_modules symlinked, para os gates poderem correr). A diff é obtida via git
+    contra um commit baseline. Degrada com mensagem clara se o CLI `claude` não existir.
     """
     if shutil.which("claude") is None:
         return _empty_run(error="`claude` CLI não encontrado (npm i -g @anthropic-ai/claude-code)")
@@ -172,7 +176,7 @@ def run_agent(task: dict) -> dict:
 def check_hard_gates(task: dict, cwd: Path) -> dict:
     """Corre os gates esperados (PHPStan, Pest, etc.) no sandbox pós-task."""
     gates = task["expected"].get("hard_gates", {})
-    results = {}
+    results: dict[str, dict] = {}
 
     gate_commands = {
         "phpstan_passes": ["./vendor/bin/phpstan", "analyse", "--no-progress"],
@@ -183,7 +187,7 @@ def check_hard_gates(task: dict, cwd: Path) -> dict:
         "build_succeeds": ["pnpm", "run", "build"],
     }
 
-    for gate_name, expected in gates.items():
+    for gate_name in gates:
         cmd = gate_commands.get(gate_name)
         if not cmd:
             results[gate_name] = {"ran": False, "passed": None}
@@ -206,7 +210,7 @@ def check_file_expectations(task: dict, run_result: dict) -> dict:
     def matches_any(path: str, patterns: list) -> bool:
         return any(fnmatch.fnmatch(path, p) for p in patterns)
 
-    results = {"required_created_missing": [], "required_modified_missing": [], "forbidden_touched": []}
+    results: dict[str, list] = {"required_created_missing": [], "required_modified_missing": [], "forbidden_touched": []}
 
     for pattern in exp.get("required_files_created", []):
         if not any(matches_any(f, [pattern]) for f in created):
@@ -310,7 +314,7 @@ def _emit_observability(task_id: str, run_result: dict, score: dict, cost: float
             passed=score["passed"],
             source="eval",
         )
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         logger = TrajectoryLogger(task_id=f"{task_id}-{stamp}")
         for f in run_result.get("files_created", []):
             logger.log_file_change(f, "create")
@@ -352,7 +356,7 @@ def run_one_task(task_id: str, policy: dict) -> dict:
 
     return {
         "task_id": task_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "wallclock_seconds": time.time() - started,
         "cost_usd": cost,
         "run_metrics": run_result,
@@ -393,6 +397,53 @@ def compare(baseline_path: Path, current_path: Path) -> None:
         sys.exit(1)
 
 
+def _slim(summary: dict) -> dict:
+    """Baseline enxuto: só o que decide regressão (sem diffs nem respostas)."""
+    return {
+        "timestamp": summary["timestamp"],
+        "total": summary["total"],
+        "passed": summary["passed"],
+        "results": [
+            {
+                "task_id": r["task_id"],
+                "score": {"passed": r["score"]["passed"]},
+                "efficiency_score": r["score"].get("efficiency_score"),
+                "cost_usd": r.get("cost_usd"),
+            }
+            for r in summary["results"]
+        ],
+    }
+
+
+def write_baseline(summary: dict) -> None:
+    BASELINE_FILE.write_text(json.dumps(_slim(summary), indent=2, ensure_ascii=False))
+    print(f"✓ baseline updated → {BASELINE_FILE.relative_to(ROOT)} "
+          f"({summary['passed']}/{summary['total']} passing). Commit it to set the bar.")
+
+
+def check_regression(summary: dict) -> int:
+    """Compara o run atual com o baseline.json commitado. Retorna 1 se alguma task
+    que passava no baseline falha agora. Sem baseline ainda → não falha (bootstrap)."""
+    if not BASELINE_FILE.exists():
+        print("ℹ no baseline.json yet — run `eval.py run --all --update-baseline` "
+              "and commit it to enable regression detection", file=sys.stderr)
+        return 0
+    baseline = json.loads(BASELINE_FILE.read_text())
+    base_pass = {r["task_id"]: r["score"]["passed"] for r in baseline.get("results", [])}
+    regressions = [
+        r["task_id"] for r in summary["results"]
+        if base_pass.get(r["task_id"]) and not r["score"]["passed"]
+    ]
+    if regressions:
+        print(f"🛑 regression: {len(regressions)} task(s) passed in baseline but fail now:",
+              file=sys.stderr)
+        for t in regressions:
+            print(f"  ✗ {t}", file=sys.stderr)
+        return 1
+    print(f"✓ no regression vs baseline ({summary['passed']}/{summary['total']} passing)")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -400,6 +451,10 @@ def main():
     p_run = sub.add_parser("run")
     p_run.add_argument("--task", help="ID de uma task específica")
     p_run.add_argument("--all", action="store_true")
+    p_run.add_argument("--update-baseline", action="store_true",
+                       help="Grava o resultado como novo baseline.json (a barra known-good)")
+    p_run.add_argument("--check-regression", action="store_true",
+                       help="Falha (exit 1) se uma task que passava no baseline falha agora")
 
     p_cmp = sub.add_parser("compare")
     p_cmp.add_argument("--baseline", required=True)
@@ -433,16 +488,21 @@ def main():
                 break
 
         summary = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "total": len(results),
             "passed": sum(1 for r in results if r["score"]["passed"]),
             "total_cost_usd": round(total_cost, 4),
             "results": results,
         }
-        out = RESULTS_DIR / f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json"
+        out = RESULTS_DIR / f"{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}.json"
         out.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
         print(f"\n✓ {summary['passed']}/{summary['total']} passed  (cost ${total_cost:.2f})")
         print(f"  Saved to {out.relative_to(ROOT)}")
+
+        if args.update_baseline:
+            write_baseline(summary)
+        if args.check_regression:
+            sys.exit(check_regression(summary))
 
     elif args.cmd == "compare":
         compare(Path(args.baseline), Path(args.current))

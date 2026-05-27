@@ -89,7 +89,7 @@ def main():
 
     for level in RISK_ORDER:
         if level in classifications:
-            high_risk_files = [f for f, c in zip(files, classifications) if c == level]
+            high_risk_files = [f for f, c in zip(files, classifications, strict=True) if c == level]
             print(level)
             # Em stderr para o developer ver o detalhe
             print(f"Risk: {level}", file=sys.stderr)

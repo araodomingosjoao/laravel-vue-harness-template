@@ -23,7 +23,7 @@ import hashlib
 import json
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 TRACE_DIR = Path(__file__).parent.parent / ".harness" / "traces"
@@ -36,14 +36,14 @@ class TrajectoryLogger:
     def __init__(self, task_id: str):
         self.task_id = task_id
         self.trace_file = TRACE_DIR / f"{task_id}.jsonl"
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
         self._log({
             "type": "task_started",
             "task_id": task_id,
         })
 
     def _log(self, event: dict) -> None:
-        event["timestamp"] = datetime.now(timezone.utc).isoformat()
+        event["timestamp"] = datetime.now(UTC).isoformat()
         with self.trace_file.open("a") as f:
             f.write(json.dumps(event) + "\n")
 
@@ -83,7 +83,7 @@ class TrajectoryLogger:
         self._log({
             "type": "task_finished",
             "status": status,
-            "duration_seconds": (datetime.now(timezone.utc) - self.start_time).total_seconds(),
+            "duration_seconds": (datetime.now(UTC) - self.start_time).total_seconds(),
         })
 
 

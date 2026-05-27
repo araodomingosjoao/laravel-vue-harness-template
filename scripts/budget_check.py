@@ -13,10 +13,8 @@ Uso:
 
 import argparse
 import json
-import os
 import sys
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import yaml
@@ -52,7 +50,7 @@ def check_rate_limits(policy: dict) -> None:
     if not USAGE_FILE.exists():
         return
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     one_hour_ago = now - timedelta(hours=1)
     one_day_ago = now - timedelta(days=1)
 
@@ -106,7 +104,7 @@ def check_task_budget(policy: dict, task_id: str, tokens: int, calls: int, durat
 def record_event(event_type: str, **payload) -> None:
     """Regista evento em log estruturado."""
     event = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "type": event_type,
         **payload,
     }

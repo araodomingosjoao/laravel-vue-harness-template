@@ -10,9 +10,8 @@ Uso:
 
 import argparse
 import json
-import sys
-from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+from collections import Counter
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import mean, median
 
@@ -26,7 +25,7 @@ def load_events(days: int = 7) -> list:
     f = STATE_DIR / "usage.jsonl"
     if not f.exists():
         return []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     events = []
     for line in f.read_text().splitlines():
         try:
@@ -90,7 +89,6 @@ def trace_health() -> dict:
         return {"no_traces": True}
 
     recent = sorted(TRACE_DIR.glob("*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)[:20]
-    warnings_per_task = []
     loop_count = 0
     high_churn_count = 0
 

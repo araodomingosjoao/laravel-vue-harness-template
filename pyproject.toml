@@ -1,0 +1,20 @@
+# Tooling Python do harness (scripts/ + tests/harness/). Separado do ecossistema
+# PHP/Node — serve só para lint/type/test dos scripts que governam o harness, de
+# modo a que um bug num sensor (como o do classify_risk ou o do .gitignore) seja
+# apanhado antes de chegar a produção.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]  # legibilidade > rigidez de comprimento nestes scripts
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true  # yaml e afins não têm stubs instalados
+
+[tool.pytest.ini_options]
+pythonpath = ["scripts"]
+testpaths = ["tests/harness"]

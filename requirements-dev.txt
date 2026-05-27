@@ -1,0 +1,6 @@
+# Deps Python do harness (scripts + self-tests). Instala com:
+#   pip install -r requirements-dev.txt
+pyyaml
+pytest
+ruff
+mypy

@@ -23,7 +23,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 STATE_DIR = Path(__file__).parent.parent / ".harness" / "state"
@@ -63,7 +63,7 @@ def _seen() -> set:
 
 
 def _append(event: dict) -> None:
-    event.setdefault("timestamp", datetime.now(timezone.utc).isoformat())
+    event.setdefault("timestamp", datetime.now(UTC).isoformat())
     with USAGE_FILE.open("a") as f:
         f.write(json.dumps(event) + "\n")
 

@@ -21,8 +21,11 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - README §5 — instruções de **branch protection** (`gh api`): exigir PR + os 4 gates deterministas (`Pre-flight checks`, `Supply chain & secrets`, `Laravel`, `Vue + TS`) + 1 aprovação humana antes de merge. É o que torna os sensores e o merge-gate *obrigatórios* em vez de meramente consultivos — sem isto, o agente podia fazer merge do próprio PR vermelho
 - `scripts/sync_activity.py` — puxa a atividade real do agente no GitHub (runs do `claude.yml` + PRs `claude/*`) para o `usage.jsonl`, para o dashboard refletir o que o `@claude` faz e não só os evals locais (idempotente)
 - **Observabilidade ligada a dados reais** (antes o `dashboard`/`trajectory` estavam vazios — ninguém escrevia o `usage.jsonl`): `eval.py` emite agora `task_completed` (custo/tokens/duração reais do `claude -p --output-format json`) + uma trace por task; `budget_check.py` aceita `--cost-usd`/`--source`; `dashboard.py` mostra **custo real** (não estimado por tokens) e reparte as tasks por fonte (`eval`/`agent`)
+- **Baseline persistence do eval-set**: `eval.py run --all --update-baseline` grava `tests/harness/eval-set/baseline.json` (commitado, a barra known-good) e `--check-regression` falha se uma task que passava no baseline falha agora. O CI passa a usá-lo (antes comparava cada run consigo próprio via `ls -t` → não detectava regressão nenhuma)
+- **O harness valida-se a si próprio**: `pyproject.toml` (ruff + mypy + pytest), `requirements-dev.txt`, `tests/harness/test_harness_scripts.py` (18 testes da lógica de risco/budget/scoring/métricas/regressão) e o job de CI `Harness self-test`. Um bug num sensor (como o do `classify_risk` ou o do `.gitignore`) passa a ter rede
 
 ### Corrigido
+- `classify_risk.py` (`zip` sem `strict`), `dashboard.py` (variável morta) e `eval.py` (anotações de tipo em falta, loop var não usada, docstring do sandbox desatualizada) — apanhados pelo novo ruff/mypy
 - `.gitignore` usava comentários inline (`.harness/runs/   # ...`), que o git **não suporta** — o padrão passava a incluir o `#` e o texto e deixava de fazer match. Resultado: `.harness/runs/`, `.harness/state/` e os outputs do eval set (`tests/harness/eval-set/results/`) **não estavam a ser ignorados**. Comentários movidos para a própria linha
 
 ## [2.1.0] - 2026-05-26
