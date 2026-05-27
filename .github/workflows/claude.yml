@@ -5,6 +5,10 @@ name: Claude agent
 # numa branch e abre/atualiza o PR. Os gates + ai-review + security-review
 # (agent-pr.yml) validam-no depois. Corre na subscrição (CLAUDE_CODE_OAUTH_TOKEN).
 #
+# Pedido vago ou de escopo grande? O agente usa primeiro o sub-agente spec-writer:
+# publica uma spec e, se ficarem perguntas em aberto que não resolve pelo CLAUDE.md/
+# ADRs/código, pára sem implementar até o humano responder (ver claude_args abaixo).
+#
 # NOTA: para o PR do agente disparar automaticamente o agent-pr.yml, é preciso o
 # Claude GitHub App instalado (um PR aberto pelo GITHUB_TOKEN não dispara outros
 # workflows). Vê o README §5.
@@ -53,4 +57,4 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
-          claude_args: '--append-system-prompt "Before finishing, run composer gates and pnpm gates locally and fix every failure so the PR checks are green. Keep changes minimal and within CLAUDE.md conventions."'
+          claude_args: '--append-system-prompt "If the request is vague or large in scope, first use the spec-writer subagent to produce a spec in its format and post it. If open questions remain that you cannot resolve from CLAUDE.md, the ADRs or the existing code, post the spec with an Open questions section and STOP without implementing — ask the human to answer and re-mention @claude. Never invent decisions. For clear, small tasks, implement directly and put the spec summary in the PR description. Before finishing, run composer gates and pnpm gates locally and fix every failure so the PR checks are green. Keep changes minimal and within CLAUDE.md conventions."'

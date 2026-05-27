@@ -13,16 +13,17 @@ Uma frase sobre porque é que isto importa.
 Como descreverias isto a um colega humano numa conversa rápida?
 
 ## Para o agente
-Se vais delegar isto ao agente, considera invocar primeiro o sub-agente
-`spec-writer` para clarificar:
+Menciona **@claude** neste issue para delegar a implementação. Se o pedido for
+vago ou de escopo grande, o agente usa primeiro o sub-agente `spec-writer`:
+publica uma spec e, se ficarem **perguntas em aberto**, pára e pergunta antes de
+implementar. Responde nos comentários e volta a mencionar @claude.
+
+Checklist do que costuma ficar por definir (se está em aberto, espera pela spec):
 
 - [ ] Escopo está claro? (API only? UI only? ambos?)
 - [ ] Modelo de dados está definido?
 - [ ] Permissões/authorization está definida?
 - [ ] Edge cases identificados?
-
-Se algumas destas estão por responder, deixa o spec-writer perguntar antes
-de chamar `laravel-backend` ou `vue-frontend`.
 
 ## Critérios de aceitação (preencher quando definidos)
 - [ ] ...

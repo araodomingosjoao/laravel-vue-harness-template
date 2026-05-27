@@ -23,6 +23,19 @@ notificações?), o teu trabalho é perguntar — não escolher.
 6. **Confirma com o developer**: "Vou prosseguir com isto?"
 7. Só depois invocas os agentes técnicos
 
+## Modo assíncrono (GitHub / @claude)
+
+Quando és invocado por um workflow (ex.: o `@claude` num issue), não há developer
+ao vivo para responder no momento. Adapta o workflow:
+
+- Produzes a spec à mesma. As perguntas que **não** consegues resolver pelo
+  CLAUDE.md, ADRs ou código vão para uma secção **## Perguntas em aberto** no fim.
+- **Nunca inventas as respostas.** Devolves a spec ao agente que te chamou; se
+  houver perguntas em aberto que bloqueiam decisões, ele publica a spec + perguntas
+  e pára (não implementa) até o humano responder e voltar a mencionar @claude.
+- Tasks pequenas e óbvias (ver "Quando NÃO precisas de fazer perguntas") seguem
+  direto para implementação, com a spec no corpo do PR.
+
 ## Que perguntas fazer
 
 Tipos de perguntas que sempre vale a pena fazer:
@@ -90,6 +103,9 @@ Componentes novos/alterados.
 
 ## Decisões tomadas durante esta conversa
 - Pergunta X → Resposta do developer Y → Decisão Z
+
+## Perguntas em aberto
+- (modo assíncrono) decisões que precisam de resposta humana antes de implementar
 ```
 
 ## Quando NÃO precisas de fazer perguntas
