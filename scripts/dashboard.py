@@ -49,9 +49,13 @@ def compute_metrics(events: list) -> dict:
     durations = [t.get("duration", 0) for t in tasks]
     token_counts = [t.get("tokens", 0) for t in tasks]
     call_counts = [t.get("calls", 0) for t in tasks]
+    # Custo real quando o evento o traz (eval headless); senão estima por tokens.
+    real_cost = round(sum(t.get("cost_usd", 0) or 0 for t in tasks), 2)
+    by_source = Counter(t.get("source", "?") for t in tasks)
 
     return {
         "tasks_total": len(tasks),
+        "tasks_by_source": dict(by_source),
         "prs_opened": len(prs),
         "pr_per_task_ratio": round(len(prs) / max(len(tasks), 1), 2),
         "kill_switch_events": len(kills),
@@ -60,6 +64,7 @@ def compute_metrics(events: list) -> dict:
         "tokens_median": int(median(token_counts) if token_counts else 0),
         "tokens_total": sum(token_counts),
         "calls_median": int(median(call_counts) if call_counts else 0),
+        "cost_usd_real": real_cost,
         "estimated_total_cost_usd": round(sum(token_counts) * 9 / 1_000_000, 2),
     }
 
@@ -136,13 +141,17 @@ def render_text(metrics: dict, evals: dict, traces: dict) -> str:
     if metrics.get("empty"):
         lines.append("  (sem dados)")
     else:
-        lines.append(f"  Tasks completadas:       {metrics['tasks_total']}")
+        src = ", ".join(f"{k}:{v}" for k, v in metrics["tasks_by_source"].items())
+        lines.append(f"  Tasks completadas:       {metrics['tasks_total']}  ({src})")
         lines.append(f"  PRs abertos:             {metrics['prs_opened']}")
         lines.append(f"  PRs por task:            {metrics['pr_per_task_ratio']}")
         lines.append(f"  Kill switch activações:  {metrics['kill_switch_events']}")
         lines.append(f"  Duração mediana:         {metrics['duration_median_s']:.0f}s")
         lines.append(f"  Tokens total:            {metrics['tokens_total']:,}")
-        lines.append(f"  Custo estimado:          ${metrics['estimated_total_cost_usd']}")
+        if metrics["cost_usd_real"] > 0:
+            lines.append(f"  Custo real (eval):       ${metrics['cost_usd_real']}")
+        else:
+            lines.append(f"  Custo estimado:          ${metrics['estimated_total_cost_usd']}")
 
     lines.append("")
     lines.append("🧪 EVAL SET")

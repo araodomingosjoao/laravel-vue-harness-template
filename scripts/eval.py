@@ -25,6 +25,10 @@ from pathlib import Path
 
 import yaml
 
+# Sibling scripts (scripts/ está no sys.path quando corres `python scripts/eval.py`).
+from budget_check import record_event
+from trajectory import TrajectoryLogger
+
 ROOT = Path(__file__).parent.parent
 EVAL_DIR = ROOT / "tests" / "harness" / "eval-set"
 RESULTS_DIR = EVAL_DIR / "results"
@@ -290,6 +294,35 @@ def score_run(task: dict, run_result: dict, gates: dict, file_check: dict, conte
     }
 
 
+def _emit_observability(task_id: str, run_result: dict, score: dict, cost: float) -> None:
+    """Alimenta o dashboard: um evento task_completed (custo/tokens/duração reais)
+    e uma trace com os ficheiros tocados. Headless não dá tool calls individuais,
+    por isso a trace regista o desfecho + ficheiros, não a sequência de chamadas.
+    Nunca rebenta o eval — observabilidade é best-effort."""
+    try:
+        record_event(
+            "task_completed",
+            task_id=task_id,
+            tokens=run_result.get("tokens", 0),
+            calls=run_result.get("tool_calls", 0),
+            duration=run_result.get("duration_seconds", 0.0),
+            cost_usd=cost,
+            passed=score["passed"],
+            source="eval",
+        )
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        logger = TrajectoryLogger(task_id=f"{task_id}-{stamp}")
+        for f in run_result.get("files_created", []):
+            logger.log_file_change(f, "create")
+        for f in run_result.get("files_modified", []):
+            logger.log_file_change(f, "edit")
+        for f in run_result.get("files_deleted", []):
+            logger.log_file_change(f, "delete")
+        logger.finalize(status="passed" if score["passed"] else "failed")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def run_one_task(task_id: str, policy: dict) -> dict:
     print(f"\n▶ Running eval: {task_id}")
     task = load_task(task_id)
@@ -314,6 +347,8 @@ def run_one_task(task_id: str, policy: dict) -> dict:
     score["over_budget"] = bool(max_cost and cost > max_cost)
     if score["over_budget"]:
         print(f"  🛑 task cost ${cost:.2f} exceeded budget ${max_cost}", file=sys.stderr)
+
+    _emit_observability(task_id, run_result, score, cost)
 
     return {
         "task_id": task_id,

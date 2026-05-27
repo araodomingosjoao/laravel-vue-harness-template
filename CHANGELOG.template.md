@@ -19,6 +19,11 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 ### Adicionado
 - `.github/CODEOWNERS` — revisão humana obrigatória nos PRs; espelha os caminhos críticos/altos da `policy.yml` (`config/`, `database/migrations/`, `.github/`, middleware, providers, policies, requests, rotas). Funciona com a branch protection ("Require review from Code Owners")
 - README §5 — instruções de **branch protection** (`gh api`): exigir PR + os 4 gates deterministas (`Pre-flight checks`, `Supply chain & secrets`, `Laravel`, `Vue + TS`) + 1 aprovação humana antes de merge. É o que torna os sensores e o merge-gate *obrigatórios* em vez de meramente consultivos — sem isto, o agente podia fazer merge do próprio PR vermelho
+- `scripts/sync_activity.py` — puxa a atividade real do agente no GitHub (runs do `claude.yml` + PRs `claude/*`) para o `usage.jsonl`, para o dashboard refletir o que o `@claude` faz e não só os evals locais (idempotente)
+- **Observabilidade ligada a dados reais** (antes o `dashboard`/`trajectory` estavam vazios — ninguém escrevia o `usage.jsonl`): `eval.py` emite agora `task_completed` (custo/tokens/duração reais do `claude -p --output-format json`) + uma trace por task; `budget_check.py` aceita `--cost-usd`/`--source`; `dashboard.py` mostra **custo real** (não estimado por tokens) e reparte as tasks por fonte (`eval`/`agent`)
+
+### Corrigido
+- `.gitignore` usava comentários inline (`.harness/runs/   # ...`), que o git **não suporta** — o padrão passava a incluir o `#` e o texto e deixava de fazer match. Resultado: `.harness/runs/`, `.harness/state/` e os outputs do eval set (`tests/harness/eval-set/results/`) **não estavam a ser ignorados**. Comentários movidos para a própria linha
 
 ## [2.1.0] - 2026-05-26
 

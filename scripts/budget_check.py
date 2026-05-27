@@ -123,6 +123,8 @@ def main():
     parser.add_argument("--tokens", type=int, default=0)
     parser.add_argument("--calls", type=int, default=0)
     parser.add_argument("--duration", type=float, default=0)
+    parser.add_argument("--cost-usd", type=float, default=0.0, help="Custo real desta task (USD)")
+    parser.add_argument("--source", default="local", help="Origem do evento (eval, agent, local)")
     parser.add_argument("--trigger-kill-switch", help="Activa kill switch com este motivo")
     args = parser.parse_args()
 
@@ -146,10 +148,12 @@ def main():
                      task_id=args.task_id,
                      tokens=args.tokens,
                      calls=args.calls,
-                     duration=args.duration)
+                     duration=args.duration,
+                     cost_usd=args.cost_usd,
+                     source=args.source)
 
     if args.record_pr:
-        record_event("pr_opened", task_id=args.task_id or "unknown")
+        record_event("pr_opened", task_id=args.task_id or "unknown", source=args.source)
 
     print("✓ Budget check OK")
 

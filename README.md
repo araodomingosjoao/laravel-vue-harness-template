@@ -123,6 +123,12 @@ python scripts/dashboard.py
 
 Se ambos passam, estás pronto para começar a pedir features ao agente.
 
+O dashboard é o teu cockpit local. Os dados chegam de três sítios: `eval.py`
+(custo/tokens/duração reais por task), `sync_activity.py` (atividade do `@claude`
+no GitHub — corre-o quando quiseres atualizar) e os resultados do eval set. O
+custo **em dólares** acumulado vês no Anthropic Console; a action não o expõe por
+run. Tudo isto é estado local (`.harness/`, fora do git).
+
 ## Stack assumida
 
 | Camada | Tecnologia | Versão |
@@ -179,9 +185,10 @@ agnóstico — é deliberadamente focado.
 │   ├── pre-commit            # Detecção de segredos
 │   ├── budget_check.py       # Enforcement de budgets
 │   ├── classify_risk.py      # Risco por path
-│   ├── trajectory.py         # Logging estruturado
-│   ├── dashboard.py          # Métricas
-│   ├── eval.py               # Eval set runner
+│   ├── trajectory.py         # Logging estruturado de trajetórias
+│   ├── dashboard.py          # Observabilidade (lê usage.jsonl + traces + evals)
+│   ├── sync_activity.py      # Puxa a atividade do @claude do GitHub
+│   ├── eval.py               # Eval set runner (alimenta o dashboard)
 │   └── check_dependencies.py # Allow-list enforcement
 │
 ├── docs/
