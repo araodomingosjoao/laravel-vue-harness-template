@@ -79,6 +79,13 @@ secret** como `CLAUDE_CODE_OAUTH_TOKEN`. Este token serve o `ai-review` e o
 > (platform.claude.com → Limits/Billing) — é o único tecto fiável. O `eval-set` na
 > subscrição é limitado pela tua quota, não pelos $.
 
+**Implementação conduzida pelo agente (`claude.yml`).** Menciona `@claude` num
+issue ou comentário de PR (ex.: *"@claude adiciona um endpoint GET /api/ping"*) e
+o agente implementa numa branch e abre/atualiza o PR, na tua subscrição. Para que
+o PR do agente **dispare automaticamente** o `agent-pr.yml` (gates + reviews),
+instala o **Claude GitHub App** no repo (github.com/apps/claude, ou `/install-github-app`
+no Claude Code) — um PR aberto pelo `GITHUB_TOKEN` não dispara outros workflows.
+
 ### 6. Validar que tudo funciona
 
 ```bash
@@ -130,7 +137,8 @@ agnóstico — é deliberadamente focado.
 │   └── vue-frontend.md
 │
 ├── .github/                  # CI/CD, templates de issues e PRs
-│   ├── workflows/agent-pr.yml
+│   ├── workflows/agent-pr.yml   # gates + AI review + security review + e2e
+│   ├── workflows/claude.yml     # @claude → o agente implementa e abre PR
 │   ├── ISSUE_TEMPLATE/
 │   └── PULL_REQUEST_TEMPLATE.md
 │
