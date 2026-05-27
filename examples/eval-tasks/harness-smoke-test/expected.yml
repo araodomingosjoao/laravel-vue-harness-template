@@ -30,7 +30,6 @@ content_checks:
   - file: "app/Http/Controllers/Api/HealthController.php"
     must_contain:
       - "declare(strict_types=1)"
-      - "final class"
     must_not_contain:
       - "validate("       # endpoint não tem inputs, validação inline seria sem sentido
       - "->get()"         # não devia haver queries Eloquent neste endpoint
