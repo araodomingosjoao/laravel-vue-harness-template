@@ -191,7 +191,7 @@ def score_run(task: dict, run_result: dict, gates: dict, file_check: dict, conte
 
 
 def run_one_task(task_id: str) -> dict:
-    print(f"\n▶ A correr eval: {task_id}")
+    print(f"\n▶ Running eval: {task_id}")
     task = load_task(task_id)
     started = time.time()
 
@@ -229,13 +229,13 @@ def compare(baseline_path: Path, current_path: Path) -> None:
         elif cp and not bp:
             improvements.append(tid)
 
-    print(f"\n=== Comparação eval set ===")
+    print("\n=== Eval set comparison ===")
     print(f"Baseline: {baseline_path.name}")
-    print(f"Actual:   {current_path.name}")
-    print(f"\nRegressões: {len(regressions)}")
+    print(f"Current:  {current_path.name}")
+    print(f"\nRegressions: {len(regressions)}")
     for r in regressions:
         print(f"  ✗ {r}")
-    print(f"\nMelhorias: {len(improvements)}")
+    print(f"\nImprovements: {len(improvements)}")
     for i in improvements:
         print(f"  ✓ {i}")
 
@@ -264,7 +264,7 @@ def main():
         elif args.task:
             task_ids = [args.task]
         else:
-            print("Especifica --task ou --all", file=sys.stderr)
+            print("Specify --task or --all", file=sys.stderr)
             sys.exit(1)
 
         results = [run_one_task(tid) for tid in task_ids]
@@ -277,8 +277,8 @@ def main():
         }
         out = RESULTS_DIR / f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json"
         out.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
-        print(f"\n✓ {summary['passed']}/{summary['total']} passou")
-        print(f"  Guardado em {out.relative_to(ROOT)}")
+        print(f"\n✓ {summary['passed']}/{summary['total']} passed")
+        print(f"  Saved to {out.relative_to(ROOT)}")
 
     elif args.cmd == "compare":
         compare(Path(args.baseline), Path(args.current))

@@ -38,12 +38,12 @@ def check_kill_switch(policy: dict) -> None:
     # Manual override por ficheiro (para emergências sem editar yml)
     if KILL_SWITCH_FILE.exists():
         reason = KILL_SWITCH_FILE.read_text().strip() or "(sem motivo registado)"
-        print(f"🛑 Kill switch ACTIVO: {reason}", file=sys.stderr)
-        print(f"   Para reactivar: rm {KILL_SWITCH_FILE}", file=sys.stderr)
+        print(f"🛑 Kill switch ACTIVE: {reason}", file=sys.stderr)
+        print(f"   To re-enable: rm {KILL_SWITCH_FILE}", file=sys.stderr)
         sys.exit(2)
 
     if not policy.get("enabled", True):
-        print("🛑 Harness desabilitado em policy.yml (enabled: false)", file=sys.stderr)
+        print("🛑 Harness disabled in policy.yml (enabled: false)", file=sys.stderr)
         sys.exit(2)
 
 
@@ -74,13 +74,13 @@ def check_rate_limits(policy: dict) -> None:
 
     limits = policy.get("rate_limits", {})
     if pr_events_hour >= limits.get("max_prs_per_hour", 999):
-        print(f"🛑 Rate limit: {pr_events_hour} PRs na última hora "
-              f"(limite {limits['max_prs_per_hour']})", file=sys.stderr)
+        print(f"🛑 Rate limit: {pr_events_hour} PRs in the last hour "
+              f"(limit {limits['max_prs_per_hour']})", file=sys.stderr)
         sys.exit(3)
 
     if pr_events_day >= limits.get("max_prs_per_day", 9999):
-        print(f"🛑 Rate limit: {pr_events_day} PRs nas últimas 24h "
-              f"(limite {limits['max_prs_per_day']})", file=sys.stderr)
+        print(f"🛑 Rate limit: {pr_events_day} PRs in the last 24h "
+              f"(limit {limits['max_prs_per_day']})", file=sys.stderr)
         sys.exit(3)
 
 
@@ -97,7 +97,7 @@ def check_task_budget(policy: dict, task_id: str, tokens: int, calls: int, durat
         violations.append(f"duration: {duration:.0f}s > {b['max_duration_seconds']}s")
 
     if violations:
-        print(f"🛑 Task {task_id} excedeu budget:", file=sys.stderr)
+        print(f"🛑 Task {task_id} exceeded budget:", file=sys.stderr)
         for v in violations:
             print(f"   {v}", file=sys.stderr)
         sys.exit(4)
@@ -128,7 +128,7 @@ def main():
 
     if args.trigger_kill_switch:
         KILL_SWITCH_FILE.write_text(args.trigger_kill_switch)
-        print(f"🛑 Kill switch activado: {args.trigger_kill_switch}")
+        print(f"🛑 Kill switch activated: {args.trigger_kill_switch}")
         record_event("kill_switch_activated", reason=args.trigger_kill_switch)
         return
 

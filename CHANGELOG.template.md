@@ -31,7 +31,7 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - `.gitignore` padrão do Laravel em `bootstrap/cache` e `storage/*` (um clone fresco arranca sem passos manuais)
 - Smoke test Playwright (`tests/e2e/smoke.spec.ts`) + `playwright.config.ts` — o job e2e não tinha specs e falhava em qualquer PR de risco ≥ medium
 - Jobs pagos opcionais, desligados por defeito e configuráveis por repo Variables: `security-review` (`HARNESS_SECURITY_REVIEW=true`) e `eval-set` (`HARNESS_EVAL_SET=true`), ambos com `ANTHROPIC_API_KEY`
-- Convenção: o **feedback do harness** (notices/erros do CI e comentários do AI review) é em **inglês**, mesmo com docs/comentários internos em português
+- Convenção: o **feedback do harness** (notices/erros do CI, output dos scripts e comentários do AI review) é em **inglês**, mesmo com docs/comentários internos em português
 
 ### Corrigido
 - `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch` porque `github.base_ref` está vazio fora de PRs — agora é resiliente e o workflow usa `HEAD~1` como base nesses eventos

@@ -31,7 +31,7 @@ def main():
             if pkg in blocked:
                 violations.append(f"BLOCKED package: {pkg} (composer)")
             elif pkg not in composer_allow:
-                violations.append(f"Não na allow-list: {pkg} (composer)")
+                violations.append(f"Not in allow-list: {pkg} (composer)")
 
     # NPM
     pkg_json = json.loads((ROOT / "package.json").read_text())
@@ -40,20 +40,20 @@ def main():
             if pkg in blocked:
                 violations.append(f"BLOCKED package: {pkg} (npm)")
             elif pkg not in npm_allow:
-                violations.append(f"Não na allow-list: {pkg} (npm)")
+                violations.append(f"Not in allow-list: {pkg} (npm)")
 
     if violations:
-        print("❌ Violações de dependency policy:", file=sys.stderr)
+        print("❌ Dependency policy violations:", file=sys.stderr)
         for v in violations:
             print(f"   {v}", file=sys.stderr)
         print(
-            "\nSe esta dependência é legítima, adiciona-a a "
-            "config/harness/dependencies.yml num PR separado com justificação.",
+            "\nIf this dependency is legitimate, add it to "
+            "config/harness/dependencies.yml in a separate PR with justification.",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    print("✓ Todas as dependências estão na allow-list")
+    print("✓ All dependencies are in the allow-list")
 
 
 if __name__ == "__main__":

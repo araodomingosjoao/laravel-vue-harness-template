@@ -31,7 +31,7 @@ def changed_files(base_ref: str = "origin/main") -> list[str]:
     base_ref = (base_ref or "").strip()
     null_ref = base_ref.rsplit("/", 1)[-1].strip("0") == ""
     if not base_ref or null_ref:
-        print(f"classify_risk: base ref inválido ('{base_ref}') — sem diff", file=sys.stderr)
+        print(f"classify_risk: invalid base ref ('{base_ref}') — no diff", file=sys.stderr)
         return []
 
     result = subprocess.run(
@@ -40,8 +40,8 @@ def changed_files(base_ref: str = "origin/main") -> list[str]:
     )
     if result.returncode != 0:
         print(
-            f"classify_risk: não consegui fazer diff contra '{base_ref}' "
-            f"({result.stderr.strip()}) — a tratar como sem alterações",
+            f"classify_risk: could not diff against '{base_ref}' "
+            f"({result.stderr.strip()}) — treating as no changes",
             file=sys.stderr,
         )
         return []
@@ -92,8 +92,8 @@ def main():
             high_risk_files = [f for f, c in zip(files, classifications) if c == level]
             print(level)
             # Em stderr para o developer ver o detalhe
-            print(f"Risco: {level}", file=sys.stderr)
-            print(f"Ficheiros que determinam o risco:", file=sys.stderr)
+            print(f"Risk: {level}", file=sys.stderr)
+            print("Files driving the risk:", file=sys.stderr)
             for f in high_risk_files[:5]:
                 print(f"  - {f}", file=sys.stderr)
             return
