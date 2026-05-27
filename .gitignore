@@ -48,8 +48,12 @@ __pycache__/
 .venv/
 venv/
 
-# ─── Harness ──────────────────────────────────────────
-.harness/runs/           # logs de execução do agente
+# ─── Harness (estado de runtime local — não versionar) ───
+# (gitignore não suporta comentários inline: ficam na própria linha)
+.harness/runs/
 .harness/cache/
+.harness/state/
+.harness/traces/
 *.agent-trace.json
-/tests/harness/eval-set/results/   # outputs de cada run do eval set
+# outputs de cada run do eval set
+/tests/harness/eval-set/results/
