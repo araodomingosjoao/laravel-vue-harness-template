@@ -9,16 +9,15 @@ version: 1
 last_updated: "{{TODAY}}"
 
 tasks:
-  # Adiciona aqui as tuas tasks à medida que descobres áreas críticas.
-  # Categorias sugeridas: crud, authorization, performance, refactor, bug, adversarial
-  #
-  # Exemplo (descomenta e adapta):
-  #
-  # - id: my-first-eval
-  #   category: crud
-  #   description: "Descrição clara do que o agente tem de fazer"
-  #   difficulty: easy        # easy | medium | hard
-  #   expected_duration_seconds: 600
-  #   active: true
+  # Task semente: smoke test do harness (agnóstica ao domínio). Verifica que o
+  # agente faz a coisa mais simples dentro das convenções. Adiciona mais à medida
+  # que descobres áreas críticas. Categorias: crud, authorization, performance,
+  # refactor, bug, adversarial.
+  - id: harness-smoke-test
+    category: crud
+    description: "Endpoint GET /api/health-deep + componente Vue HealthBadge, dentro das convenções"
+    difficulty: easy
+    expected_duration_seconds: 300
+    active: true
 
 deprecated: []

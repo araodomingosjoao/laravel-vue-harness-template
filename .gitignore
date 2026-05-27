@@ -52,3 +52,4 @@ venv/
 .harness/runs/           # logs de execução do agente
 .harness/cache/
 *.agent-trace.json
+/tests/harness/eval-set/results/   # outputs de cada run do eval set

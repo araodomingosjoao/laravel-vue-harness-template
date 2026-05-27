@@ -1,0 +1,64 @@
+# Critérios do smoke test do harness
+
+hard_gates:
+  phpstan_passes: true
+  pint_clean: true
+  pest_passes: true
+  vitest_passes: true
+  vue_tsc_clean: true
+  build_succeeds: true
+
+required_files_created:
+  - "app/Http/Controllers/Api/HealthController.php"
+  - "tests/Feature/HealthDeepTest.php"
+  - "resources/js/components/HealthBadge.vue"
+  - "resources/js/components/HealthBadge.spec.ts"
+
+required_files_modified:
+  - "routes/api.php"
+
+forbidden_changes:
+  - ".env"
+  - ".env.example"
+  - "composer.json"
+  - "package.json"
+  - "config/auth.php"
+  - "config/harness/**"
+  - "CLAUDE.md"            # smoke test não devia precisar de mudar convenções
+
+content_checks:
+  - file: "app/Http/Controllers/Api/HealthController.php"
+    must_contain:
+      - "declare(strict_types=1)"
+      - "final class"
+    must_not_contain:
+      - "validate("       # endpoint não tem inputs, validação inline seria sem sentido
+      - "->get()"         # não devia haver queries Eloquent neste endpoint
+
+  - file: "routes/api.php"
+    must_contain:
+      - "health-deep"
+
+  - file: "resources/js/components/HealthBadge.vue"
+    must_contain:
+      - "<script setup lang=\"ts\">"
+      - "useApi"
+    must_not_contain:
+      - "fetch("          # deve usar useApi, não fetch directo
+      - ": any"           # sem any em TypeScript
+      - "Options API"
+
+  - file: "resources/js/components/HealthBadge.spec.ts"
+    must_contain:
+      - "describe"
+      - "expect"
+
+scoring:
+  files_changed_target: 5
+  files_changed_max: 8
+  lines_changed_max: 250
+  tool_calls_max: 30
+  duration_max_seconds: 300
+  cost_max_usd: 0.50
+
+ai_judge_min_score: 0.70
