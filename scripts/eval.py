@@ -62,6 +62,7 @@ def load_task(task_id: str) -> dict:
 def _empty_run(**over) -> dict:
     base = {
         "tool_calls": 0, "tokens": 0, "cost_usd": 0.0, "duration_seconds": 0.0,
+        "models": [],
         "files_created": [], "files_modified": [], "files_deleted": [],
         "diff": "", "final_response": "", "sandbox": "", "error": None,
     }
@@ -91,10 +92,13 @@ def run_agent(task: dict) -> dict:
             return _empty_run(sandbox=str(sandbox), error="git archive HEAD falhou (repo sem commits?)")
         subprocess.run(["tar", "-x", "-C", str(sandbox)], input=archive.stdout, check=True)
 
-        # Symlink das dependências para os gates (PHPStan/Pest/Vitest) correrem.
-        for dep in ("vendor", "node_modules"):
-            if (ROOT / dep).exists():
-                (sandbox / dep).symlink_to(ROOT / dep)
+        # vendor: cópia real, não symlink — com symlink o autoloader do Composer
+        # resolve o base path para o repo real (não o sandbox) e os testes correriam
+        # contra o sítio errado. node_modules pode ficar symlinked (o Node segue-o).
+        if (ROOT / "vendor").exists():
+            subprocess.run(["cp", "-a", str(ROOT / "vendor"), str(sandbox / "vendor")], check=True)
+        if (ROOT / "node_modules").exists():
+            (sandbox / "node_modules").symlink_to(ROOT / "node_modules")
 
         # Baseline para conseguir fazer diff do que o agente mudou.
         subprocess.run(git + ["init", "-q"], check=True)
@@ -145,6 +149,7 @@ def run_agent(task: dict) -> dict:
             "tool_calls": data.get("num_turns", 0),
             "tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
             "cost_usd": data.get("total_cost_usd", 0.0),
+            "models": sorted((data.get("modelUsage") or {}).keys()),
             "duration_seconds": duration,
             "files_created": created,
             "files_modified": modified,
