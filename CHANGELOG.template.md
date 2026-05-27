@@ -31,6 +31,7 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - `.gitignore` padrão do Laravel em `bootstrap/cache` e `storage/*` (um clone fresco arranca sem passos manuais)
 - Smoke test Playwright (`tests/e2e/smoke.spec.ts`) + `playwright.config.ts` — o job e2e não tinha specs e falhava em qualquer PR de risco ≥ medium
 - Jobs pagos opcionais, desligados por defeito e configuráveis por repo Variables: `security-review` (`HARNESS_SECURITY_REVIEW=true`) e `eval-set` (`HARNESS_EVAL_SET=true`), ambos com `ANTHROPIC_API_KEY`
+- `eval.py` `run_agent` implementado: corre o `claude` CLI headless num sandbox isolado por task (cópia dos ficheiros tracked + symlink de `vendor`/`node_modules`), captura custo/tokens/diff, corre os gates no sandbox, e aplica tetos de custo — `budgets.max_cost_usd` por task e `HARNESS_EVAL_MAX_COST_USD` por run
 - Convenção: o **feedback do harness** (notices/erros do CI, output dos scripts e comentários do AI review) é em **inglês**, mesmo com docs/comentários internos em português
 
 ### Corrigido

@@ -70,7 +70,8 @@ Para os ligar, adiciona o secret `ANTHROPIC_API_KEY` e, em **Settings → Secret
 and variables → Actions → Variables**, define:
 
 - `HARNESS_SECURITY_REVIEW=true` — passe de segurança dedicado em cada PR
-- `HARNESS_EVAL_SET=true` — eval set semanal (`run_agent` ainda por implementar)
+- `HARNESS_EVAL_SET=true` — eval set semanal (corre o agente por task num sandbox;
+  teto de custo via `HARNESS_EVAL_MAX_COST_USD`, default `$5`)
 
 > Para limitar gastos, define um **spend limit** no Anthropic Console
 > (platform.claude.com → Limits/Billing). É o único tecto fiável do que gastas em

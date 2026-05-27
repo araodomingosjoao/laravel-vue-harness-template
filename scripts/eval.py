@@ -14,9 +14,11 @@ Uso:
 import argparse
 import fnmatch
 import json
-import re
+import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +29,16 @@ ROOT = Path(__file__).parent.parent
 EVAL_DIR = ROOT / "tests" / "harness" / "eval-set"
 RESULTS_DIR = EVAL_DIR / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+POLICY_FILE = ROOT / "config" / "harness" / "policy.yml"
+
+# Agente headless: `claude -p` num sandbox isolado, billed à API (ANTHROPIC_API_KEY).
+AGENT_TIMEOUT = 1800  # segundos — alinha com budgets.max_duration_seconds
+AGENT_ALLOWED_TOOLS = "Bash,Read,Edit,Write,Glob,Grep"
+
+
+def load_policy() -> dict:
+    return yaml.safe_load(POLICY_FILE.read_text()) if POLICY_FILE.exists() else {}
 
 
 def load_manifest() -> dict:
@@ -44,29 +56,99 @@ def load_task(task_id: str) -> dict:
     }
 
 
+def _empty_run(**over) -> dict:
+    base = {
+        "tool_calls": 0, "tokens": 0, "cost_usd": 0.0, "duration_seconds": 0.0,
+        "files_created": [], "files_modified": [], "files_deleted": [],
+        "diff": "", "final_response": "", "sandbox": "", "error": None,
+    }
+    base.update(over)
+    return base
+
+
 def run_agent(task: dict) -> dict:
     """
-    Stub: na implementação real, isto invoca o agente (Claude Code SDK ou
-    API directa) com o prompt, num sandbox isolado, e captura tudo.
+    Corre o agente (Claude Code headless, `claude -p`) sobre o prompt da task num
+    sandbox isolado, e captura métricas + diff. Billed à API via ANTHROPIC_API_KEY.
 
-    Retorna métricas observadas: tool_calls, tokens, duration, files changed, etc.
+    O sandbox é uma cópia dos ficheiros tracked do repo (vendor/node_modules são
+    symlinked para os gates poderem correr). A diff é obtida via git contra um
+    commit baseline. Degrada com mensagem clara se o CLI `claude` não existir.
     """
-    # Placeholder — na realidade invoca o agente
-    return {
-        "tool_calls": 0,
-        "tokens": 0,
-        "duration_seconds": 0,
-        "files_created": [],
-        "files_modified": [],
-        "files_deleted": [],
-        "diff": "",
-        "final_response": "",
-        "trace_path": "",
-    }
+    if shutil.which("claude") is None:
+        return _empty_run(error="`claude` CLI não encontrado (npm i -g @anthropic-ai/claude-code)")
+
+    sandbox = Path(tempfile.mkdtemp(prefix=f"eval-{task['id']}-"))
+    git = ["git", "-C", str(sandbox)]
+    try:
+        # Cópia só dos ficheiros tracked (sem vendor/node_modules), via git archive.
+        archive = subprocess.run(["git", "archive", "HEAD"], cwd=ROOT, capture_output=True)
+        if archive.returncode != 0:
+            return _empty_run(sandbox=str(sandbox), error="git archive HEAD falhou (repo sem commits?)")
+        subprocess.run(["tar", "-x", "-C", str(sandbox)], input=archive.stdout, check=True)
+
+        # Symlink das dependências para os gates (PHPStan/Pest/Vitest) correrem.
+        for dep in ("vendor", "node_modules"):
+            if (ROOT / dep).exists():
+                (sandbox / dep).symlink_to(ROOT / dep)
+
+        # Baseline para conseguir fazer diff do que o agente mudou.
+        subprocess.run(git + ["init", "-q"], check=True)
+        subprocess.run(git + ["add", "-A"], check=True, capture_output=True)
+        subprocess.run(
+            git + ["-c", "commit.gpgsign=false", "-c", "user.email=eval@harness",
+                   "-c", "user.name=eval", "commit", "-qm", "baseline"],
+            check=True, capture_output=True,
+        )
+
+        started = time.time()
+        proc = subprocess.run(
+            ["claude", "-p", task["prompt"], "--output-format", "json",
+             "--permission-mode", "acceptEdits", "--allowedTools", AGENT_ALLOWED_TOOLS],
+            cwd=sandbox, capture_output=True, text=True, timeout=AGENT_TIMEOUT,
+        )
+        duration = round(time.time() - started, 1)
+
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            return _empty_run(sandbox=str(sandbox), duration_seconds=duration,
+                              error=f"output do agente não-parseável: {proc.stdout[:300]}")
+
+        usage = data.get("usage") or {}
+        status = subprocess.run(git + ["status", "--porcelain"], capture_output=True, text=True).stdout
+        created, modified, deleted = [], [], []
+        for line in status.splitlines():
+            code, path = line[:2].strip(), line[3:].strip()
+            if code in ("A", "??"):
+                created.append(path)
+            elif code == "D":
+                deleted.append(path)
+            else:
+                modified.append(path)
+        diff = subprocess.run(git + ["diff", "HEAD"], capture_output=True, text=True).stdout
+
+        return {
+            "tool_calls": data.get("num_turns", 0),
+            "tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+            "cost_usd": data.get("total_cost_usd", 0.0),
+            "duration_seconds": duration,
+            "files_created": created,
+            "files_modified": modified,
+            "files_deleted": deleted,
+            "diff": diff,
+            "final_response": data.get("result", ""),
+            "sandbox": str(sandbox),
+            "error": data.get("result") if data.get("is_error") else None,
+        }
+    except subprocess.TimeoutExpired:
+        return _empty_run(sandbox=str(sandbox), error=f"agente excedeu {AGENT_TIMEOUT}s")
+    except Exception as e:  # noqa: BLE001 — o eval nunca deve rebentar por uma task
+        return _empty_run(sandbox=str(sandbox), error=str(e))
 
 
-def check_hard_gates(task: dict, run_result: dict) -> dict:
-    """Corre os gates esperados (PHPStan, Pest, etc.) no estado pós-task."""
+def check_hard_gates(task: dict, cwd: Path) -> dict:
+    """Corre os gates esperados (PHPStan, Pest, etc.) no sandbox pós-task."""
     gates = task["expected"].get("hard_gates", {})
     results = {}
 
@@ -85,7 +167,7 @@ def check_hard_gates(task: dict, run_result: dict) -> dict:
             results[gate_name] = {"ran": False, "passed": None}
             continue
         try:
-            r = subprocess.run(cmd, capture_output=True, timeout=600)
+            r = subprocess.run(cmd, capture_output=True, timeout=600, cwd=cwd)
             results[gate_name] = {"ran": True, "passed": r.returncode == 0}
         except subprocess.TimeoutExpired:
             results[gate_name] = {"ran": True, "passed": False, "reason": "timeout"}
@@ -125,15 +207,15 @@ def check_file_expectations(task: dict, run_result: dict) -> dict:
     return results
 
 
-def check_content(task: dict, run_result: dict) -> list:
-    """Verifica content_checks e must_not_contain_in_any_file."""
+def check_content(task: dict, run_result: dict, cwd: Path) -> list:
+    """Verifica content_checks e must_not_contain_in_any_file (no sandbox)."""
     failures = []
     exp = task["expected"]
 
     for check in exp.get("content_checks", []):
-        path = ROOT / check["file"]
+        path = cwd / check["file"]
         if not path.exists():
-            failures.append(f"content_check: {check['file']} não existe")
+            failures.append(f"content_check: {check['file']} does not exist")
             continue
         content = path.read_text()
         for needle in check.get("must_contain", []):
@@ -147,7 +229,7 @@ def check_content(task: dict, run_result: dict) -> list:
     forbidden_globals = exp.get("must_not_contain_in_any_file", [])
     if forbidden_globals:
         for f in run_result["files_created"] + run_result["files_modified"]:
-            fp = ROOT / f
+            fp = cwd / f
             if not fp.exists() or fp.is_dir():
                 continue
             try:
@@ -190,21 +272,36 @@ def score_run(task: dict, run_result: dict, gates: dict, file_check: dict, conte
     }
 
 
-def run_one_task(task_id: str) -> dict:
+def run_one_task(task_id: str, policy: dict) -> dict:
     print(f"\n▶ Running eval: {task_id}")
     task = load_task(task_id)
     started = time.time()
 
     run_result = run_agent(task)
-    gates = check_hard_gates(task, run_result)
-    file_check = check_file_expectations(task, run_result)
-    content_fails = check_content(task, run_result)
-    score = score_run(task, run_result, gates, file_check, content_fails)
+    if run_result.get("error"):
+        print(f"  ⚠ agent: {run_result['error']}", file=sys.stderr)
+    sandbox = Path(run_result["sandbox"]) if run_result.get("sandbox") else ROOT
+    try:
+        gates = check_hard_gates(task, sandbox)
+        file_check = check_file_expectations(task, run_result)
+        content_fails = check_content(task, run_result, sandbox)
+        score = score_run(task, run_result, gates, file_check, content_fails)
+    finally:
+        if run_result.get("sandbox"):
+            shutil.rmtree(run_result["sandbox"], ignore_errors=True)
+
+    # Budget guard per task: enforce budgets.max_cost_usd from policy.yml
+    max_cost = policy.get("budgets", {}).get("max_cost_usd")
+    cost = run_result.get("cost_usd", 0.0)
+    score["over_budget"] = bool(max_cost and cost > max_cost)
+    if score["over_budget"]:
+        print(f"  🛑 task cost ${cost:.2f} exceeded budget ${max_cost}", file=sys.stderr)
 
     return {
         "task_id": task_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "wallclock_seconds": time.time() - started,
+        "cost_usd": cost,
         "run_metrics": run_result,
         "score": score,
     }
@@ -267,17 +364,31 @@ def main():
             print("Specify --task or --all", file=sys.stderr)
             sys.exit(1)
 
-        results = [run_one_task(tid) for tid in task_ids]
+        policy = load_policy()
+        # Cumulative cost ceiling for the whole run — configurable per env.
+        run_budget = float(os.environ.get("HARNESS_EVAL_MAX_COST_USD", "5"))
+
+        results = []
+        total_cost = 0.0
+        for tid in task_ids:
+            r = run_one_task(tid, policy)
+            results.append(r)
+            total_cost += r.get("cost_usd", 0.0)
+            if total_cost > run_budget:
+                print(f"\n🛑 cumulative cost ${total_cost:.2f} exceeded "
+                      f"HARNESS_EVAL_MAX_COST_USD ${run_budget} — stopping", file=sys.stderr)
+                break
 
         summary = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "total": len(results),
             "passed": sum(1 for r in results if r["score"]["passed"]),
+            "total_cost_usd": round(total_cost, 4),
             "results": results,
         }
         out = RESULTS_DIR / f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json"
         out.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
-        print(f"\n✓ {summary['passed']}/{summary['total']} passed")
+        print(f"\n✓ {summary['passed']}/{summary['total']} passed  (cost ${total_cost:.2f})")
         print(f"  Saved to {out.relative_to(ROOT)}")
 
     elif args.cmd == "compare":
