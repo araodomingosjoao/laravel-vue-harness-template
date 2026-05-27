@@ -100,7 +100,7 @@ o agente pode fazer merge do próprio PR. Configura uma vez (precisa de admin no
 gh api -X PUT repos/OWNER/REPO/branches/main/protection --input - <<'JSON'
 {
   "required_status_checks": { "strict": false,
-    "contexts": ["Pre-flight checks", "Supply chain & secrets", "Laravel", "Vue + TS"] },
+    "contexts": ["Pre-flight checks", "Supply chain & secrets", "Laravel", "Vue + TS", "Harness self-test"] },
   "enforce_admins": false,
   "required_pull_request_reviews": { "required_approving_review_count": 1,
     "require_code_owner_reviews": true, "dismiss_stale_reviews": true },
