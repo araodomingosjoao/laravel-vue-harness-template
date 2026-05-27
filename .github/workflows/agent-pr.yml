@@ -195,16 +195,17 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      # Subscrição Pro/Max → CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`);
-      # API → ANTHROPIC_API_KEY. Sem nenhum dos dois, o job salta (não falha).
+      # Usa só a subscrição Pro/Max (CLAUDE_CODE_OAUTH_TOKEN, via `claude setup-token`).
+      # NÃO recebe a API key de propósito: quando ambas existem a API tem precedência
+      # e seria cobrada — assim o budget de API fica reservado para os jobs opt-in.
+      # (Sem subscrição? Troca claude_code_oauth_token por anthropic_api_key abaixo.)
       - name: Check credentials
         id: creds
         env:
           OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -z "$OAUTH_TOKEN" ] && [ -z "$API_KEY" ]; then
-            echo "::notice::Sem CLAUDE_CODE_OAUTH_TOKEN nem ANTHROPIC_API_KEY — AI review saltado"
+          if [ -z "$OAUTH_TOKEN" ]; then
+            echo "::notice::No CLAUDE_CODE_OAUTH_TOKEN configured — skipping AI review"
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
@@ -219,30 +220,67 @@ jobs:
         if: steps.creds.outputs.enabled == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Revê este pull request como reviewer sénior. Cobre DUAS dimensões:
+            Review this pull request as a senior reviewer. Cover TWO dimensions:
 
-            1) Qualidade e convenções — aplica as "Regras de ouro" do CLAUDE.md:
-               Form Requests, Resources, $fillable, paginação, controllers magros,
-               Policies; no frontend script setup, Pinia setup, sem `any`, fetch via
-               composable. Inclui bugs, edge cases e performance (ex.: N+1 queries).
+            1) Quality and conventions — apply the "Regras de ouro" from CLAUDE.md:
+               Form Requests, Resources, $fillable, pagination, thin controllers,
+               Policies; on the frontend script setup, Pinia setup syntax, no `any`,
+               fetch via composable. Also bugs, edge cases and performance (e.g. N+1).
 
-            2) Segurança — analisa o diff seguindo o fluxo de dados entre ficheiros:
-               authorization/access control em falta, injeção (SQL/command),
-               desserialização insegura, SSRF, path traversal, XSS, secrets
-               hardcoded, APP_DEBUG/credenciais expostos, mass-assignment sem
-               $fillable, validação em falta. Reporta só problemas reais.
+            2) Security — analyse the diff following data flow across files:
+               missing authorization/access control, injection (SQL/command),
+               insecure deserialization, SSRF, path traversal, XSS, hardcoded
+               secrets, exposed APP_DEBUG/credentials, mass-assignment without
+               $fillable, missing validation. Report real issues only.
 
-            A branch do PR já está em checkout. Usa `gh pr comment` para o resumo e
-            `mcp__github_inline_comment__create_inline_comment` (com `confirmed: true`)
-            para problemas em linhas específicas. Comenta apenas no GitHub.
+            The PR branch is already checked out. Use `gh pr comment` for the summary
+            and `mcp__github_inline_comment__create_inline_comment` (with
+            `confirmed: true`) for line-specific issues. Comment only on GitHub.
 
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
+  # ─────────────────────────────────────────────────────────────
+  # AI SECURITY REVIEW (Claude Code Security Review — opcional, usa API)
+  # Liga com a repo Variable HARNESS_SECURITY_REVIEW=true + secret ANTHROPIC_API_KEY.
+  # Não está no merge-gate (não bloqueia): salta quando desligado.
+  # ─────────────────────────────────────────────────────────────
+  security-review:
+    name: AI security review
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: github.event_name == 'pull_request' && vars.HARNESS_SECURITY_REVIEW == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check API key
+        id: creds
+        env:
+          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$API_KEY" ]; then
+            echo "::notice::HARNESS_SECURITY_REVIEW=true but no ANTHROPIC_API_KEY — skipping security review"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+
+      - uses: anthropics/claude-code-security-review@main
+        if: steps.creds.outputs.enabled == 'true'
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 
   # ─────────────────────────────────────────────────────────────
   # E2E (só se tudo anterior passar)
@@ -294,12 +332,15 @@ jobs:
           pnpm exec playwright test
 
   # ─────────────────────────────────────────────────────────────
-  # EVAL SET (semanal)
+  # EVAL SET (semanal — opcional, usa API)
+  # Liga com a repo Variable HARNESS_EVAL_SET=true + secret ANTHROPIC_API_KEY.
+  # NOTA: scripts/eval.py tem o run_agent por implementar (stub) — só gasta
+  # API depois de o ligares ao agente.
   # ─────────────────────────────────────────────────────────────
   eval-set:
     name: Eval set (regression)
     runs-on: ubuntu-latest
-    if: github.event.schedule || github.event_name == 'workflow_dispatch'
+    if: (github.event.schedule || github.event_name == 'workflow_dispatch') && vars.HARNESS_EVAL_SET == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2

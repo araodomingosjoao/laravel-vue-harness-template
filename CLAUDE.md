@@ -178,6 +178,11 @@ dizer sozinho.
 
 > Na dúvida, não comentes. É mais fácil acrescentar um comentário em falta do que limpar ruído.
 
+**Idioma do feedback:** comentários e docs do projecto são em português, mas tudo
+o que o harness **emite como feedback** — mensagens de CI (`::notice::`/`::error::`),
+output dos scripts, e os comentários do AI review nos PRs — é em **inglês** (a
+mesma regra dos commits).
+
 ## Convenções de commits
 
 Seguimos [Conventional Commits](https://www.conventionalcommits.org/). É o padrão

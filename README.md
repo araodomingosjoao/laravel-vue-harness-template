@@ -59,14 +59,22 @@ docker-compose exec app php artisan migrate
 
 ### 5. Configurar o CI
 
-Para o job de **AI review**, em **Settings → Secrets and variables → Actions →
-New repository secret**, escolhe **uma** via:
+**AI review (subscrição, sem custos de API).** Corre `claude setup-token`
+localmente e guarda o resultado em **Settings → Secrets and variables → Actions
+→ New repository secret** como `CLAUDE_CODE_OAUTH_TOKEN`. Sem este secret, o
+`ai-review` é saltado (não falha o CI). *(Sem subscrição? Troca
+`claude_code_oauth_token` por `anthropic_api_key` no `agent-pr.yml`.)*
 
-- **Subscrição Pro/Max** (sem custos de API): corre `claude setup-token` localmente
-  e guarda o resultado em `CLAUDE_CODE_OAUTH_TOKEN`.
-- **API**: guarda a tua chave em `ANTHROPIC_API_KEY`.
+**Jobs opcionais que usam a API** (`ANTHROPIC_API_KEY`) — desligados por defeito.
+Para os ligar, adiciona o secret `ANTHROPIC_API_KEY` e, em **Settings → Secrets
+and variables → Actions → Variables**, define:
 
-Sem nenhum dos dois, o job de AI review é saltado (não falha o CI).
+- `HARNESS_SECURITY_REVIEW=true` — passe de segurança dedicado em cada PR
+- `HARNESS_EVAL_SET=true` — eval set semanal (`run_agent` ainda por implementar)
+
+> Para limitar gastos, define um **spend limit** no Anthropic Console
+> (platform.claude.com → Limits/Billing). É o único tecto fiável do que gastas em
+> API — o harness não consegue saber o saldo restante.
 
 ### 6. Validar que tudo funciona
 

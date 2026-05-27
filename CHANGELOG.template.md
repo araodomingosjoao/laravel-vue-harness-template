@@ -20,7 +20,7 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - Base de dados passou de MySQL para **PostgreSQL 18** (`docker-compose.yml`, serviços do CI, `config/database.php`, `.env.example`, default do `init.sh`)
 - Gestor de pacotes do frontend passou de **npm para pnpm** (`packageManager` no `package.json`, `pnpm/action-setup` no CI, `corepack` no docker-compose, docs e agentes)
 - Stack actualizada para as últimas versões estáveis que o ecossistema suporta: Laravel 12, PHP 8.4, Vue 3.5, Vite 8, Vitest 4, Pest 4, Larastan 3, ESLint 10, TypeScript 6, Pinia 3, Node 24, Playwright 1.60 (Laravel 13 ainda não resolve — `tinker`/plugins capam em 12)
-- AI review do CI migrado do `ai_review.py` (rubrica custom de 12 regras) para a action oficial `anthropics/claude-code-action@v1`: repo-aware, comenta inline, usa o `CLAUDE.md` como rubrica (fonte de verdade única, sem drift). Cobre qualidade **e** segurança num só job, autentica via subscrição (`CLAUDE_CODE_OAUTH_TOKEN`) ou API (`ANTHROPIC_API_KEY`), e salta se nenhum estiver configurado
+- AI review do CI migrado do `ai_review.py` (rubrica custom de 12 regras) para a action oficial `anthropics/claude-code-action@v1`: repo-aware, comenta inline, usa o `CLAUDE.md` como rubrica (fonte de verdade única, sem drift) e cobre qualidade **e** segurança num só job. Autentica **só** via subscrição (`CLAUDE_CODE_OAUTH_TOKEN`) — a API key tem precedência e seria cobrada, por isso fica reservada aos jobs opt-in — e salta se o token não estiver configurado
 - `eslint.config.js` migrado para a API `defineConfigWithVueTs` (`@vue/eslint-config-typescript` v14)
 - Lock files (`composer.lock`, `pnpm-lock.yaml`) passam a ser commitados; o CI usa `--frozen-lockfile`
 
@@ -30,6 +30,8 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 - Princípio "segue as últimas versões estáveis que o ecossistema suporta" no `CLAUDE.md` e no `README.md`
 - `.gitignore` padrão do Laravel em `bootstrap/cache` e `storage/*` (um clone fresco arranca sem passos manuais)
 - Smoke test Playwright (`tests/e2e/smoke.spec.ts`) + `playwright.config.ts` — o job e2e não tinha specs e falhava em qualquer PR de risco ≥ medium
+- Jobs pagos opcionais, desligados por defeito e configuráveis por repo Variables: `security-review` (`HARNESS_SECURITY_REVIEW=true`) e `eval-set` (`HARNESS_EVAL_SET=true`), ambos com `ANTHROPIC_API_KEY`
+- Convenção: o **feedback do harness** (notices/erros do CI e comentários do AI review) é em **inglês**, mesmo com docs/comentários internos em português
 
 ### Corrigido
 - `classify_risk.py` rebentava (exit 128) em eventos `push`/`schedule`/`dispatch` porque `github.base_ref` está vazio fora de PRs — agora é resiliente e o workflow usa `HEAD~1` como base nesses eventos
