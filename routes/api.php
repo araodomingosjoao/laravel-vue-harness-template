@@ -10,7 +10,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/ping', PingController::class);
+Route::get('/ping', PingController::class)->middleware('throttle:api');
 
 // Adiciona aqui os endpoints do teu projecto.
 // Convenção: agrupar por prefixo, usar Resource Controllers,
