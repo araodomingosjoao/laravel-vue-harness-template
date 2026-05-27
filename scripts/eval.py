@@ -32,7 +32,8 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 POLICY_FILE = ROOT / "config" / "harness" / "policy.yml"
 
-# Agente headless: `claude -p` num sandbox isolado, billed à API (ANTHROPIC_API_KEY).
+# Agente headless: `claude -p` num sandbox isolado. Usa a auth local do `claude`
+# (subscrição logada localmente, ou CLAUDE_CODE_OAUTH_TOKEN no CI).
 AGENT_TIMEOUT = 1800  # segundos — alinha com budgets.max_duration_seconds
 AGENT_ALLOWED_TOOLS = "Bash,Read,Edit,Write,Glob,Grep"
 
@@ -69,7 +70,8 @@ def _empty_run(**over) -> dict:
 def run_agent(task: dict) -> dict:
     """
     Corre o agente (Claude Code headless, `claude -p`) sobre o prompt da task num
-    sandbox isolado, e captura métricas + diff. Billed à API via ANTHROPIC_API_KEY.
+    sandbox isolado, e captura métricas + diff. Usa a auth local do `claude`:
+    a subscrição logada (local) ou CLAUDE_CODE_OAUTH_TOKEN (CI).
 
     O sandbox é uma cópia dos ficheiros tracked do repo (vendor/node_modules são
     symlinked para os gates poderem correr). A diff é obtida via git contra um

@@ -59,23 +59,25 @@ docker-compose exec app php artisan migrate
 
 ### 5. Configurar o CI
 
-**AI review (subscrição, sem custos de API).** Corre `claude setup-token`
-localmente e guarda o resultado em **Settings → Secrets and variables → Actions
-→ New repository secret** como `CLAUDE_CODE_OAUTH_TOKEN`. Sem este secret, o
+**Subscrição (sem custos de API).** Corre `claude setup-token` localmente e guarda
+o resultado em **Settings → Secrets and variables → Actions → New repository
+secret** como `CLAUDE_CODE_OAUTH_TOKEN`. Este token serve o `ai-review` e o
+`eval-set` — ambos correm na tua subscrição Pro/Max, não na API. Sem ele, o
 `ai-review` é saltado (não falha o CI). *(Sem subscrição? Troca
 `claude_code_oauth_token` por `anthropic_api_key` no `agent-pr.yml`.)*
 
-**Jobs opcionais que usam a API** (`ANTHROPIC_API_KEY`) — desligados por defeito.
-Para os ligar, adiciona o secret `ANTHROPIC_API_KEY` e, em **Settings → Secrets
-and variables → Actions → Variables**, define:
+**Jobs opcionais (repo Variables, desligados por defeito):**
 
-- `HARNESS_SECURITY_REVIEW=true` — passe de segurança dedicado em cada PR
-- `HARNESS_EVAL_SET=true` — eval set semanal (corre o agente por task num sandbox;
-  teto de custo via `HARNESS_EVAL_MAX_COST_USD`, default `$5`)
+- `HARNESS_EVAL_SET=true` — eval set semanal, na **subscrição** (`CLAUDE_CODE_OAUTH_TOKEN`);
+  teto de custo via `HARNESS_EVAL_MAX_COST_USD` (default `$5`). Localmente corre só
+  com `python scripts/eval.py run --all` (usa a tua sessão logada, sem secret).
+- `HARNESS_SECURITY_REVIEW=true` — passe de segurança dedicado em cada PR. **É o
+  único que exige API** (`ANTHROPIC_API_KEY`), porque a action de segurança não
+  suporta subscrição.
 
-> Para limitar gastos, define um **spend limit** no Anthropic Console
-> (platform.claude.com → Limits/Billing). É o único tecto fiável do que gastas em
-> API — o harness não consegue saber o saldo restante.
+> Se usares a API (security-review), define um **spend limit** no Anthropic Console
+> (platform.claude.com → Limits/Billing) — é o único tecto fiável. O `eval-set` na
+> subscrição é limitado pela tua quota, não pelos $.
 
 ### 6. Validar que tudo funciona
 
