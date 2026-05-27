@@ -14,6 +14,12 @@ e este projecto adere a [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Adicionado
+- `.github/CODEOWNERS` — revisão humana obrigatória nos PRs; espelha os caminhos críticos/altos da `policy.yml` (`config/`, `database/migrations/`, `.github/`, middleware, providers, policies, requests, rotas). Funciona com a branch protection ("Require review from Code Owners")
+- README §5 — instruções de **branch protection** (`gh api`): exigir PR + os 4 gates deterministas (`Pre-flight checks`, `Supply chain & secrets`, `Laravel`, `Vue + TS`) + 1 aprovação humana antes de merge. É o que torna os sensores e o merge-gate *obrigatórios* em vez de meramente consultivos — sem isto, o agente podia fazer merge do próprio PR vermelho
+
 ## [2.1.0] - 2026-05-26
 
 ### Mudou

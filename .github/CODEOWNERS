@@ -1,0 +1,24 @@
+# CODEOWNERS — revisão humana obrigatória nos PRs.
+#
+# Funciona em conjunto com a branch protection ("Require review from Code
+# Owners"): qualquer PR que toque nestes caminhos precisa da aprovação do owner
+# antes de merge. É o que torna real o "o humano aprova o que importa".
+#
+# TEMPLATE: substitui @araodomingosjoao pelo teu utilizador/equipa.
+
+# Rede de segurança: tudo o que o agente produz é revisto por um humano.
+*                          @araodomingosjoao
+
+# Caminhos críticos/altos (espelham config/harness/policy.yml → risk_classification).
+# Explícitos para documentar o modelo de risco (já cobertos por * acima).
+/.github/                  @araodomingosjoao
+/config/                   @araodomingosjoao
+/database/migrations/      @araodomingosjoao
+/app/Http/Middleware/      @araodomingosjoao
+/app/Providers/            @araodomingosjoao
+/app/Policies/             @araodomingosjoao
+/app/Http/Requests/        @araodomingosjoao
+/routes/                   @araodomingosjoao
+/composer.json             @araodomingosjoao
+/package.json              @araodomingosjoao
+/CLAUDE.md                 @araodomingosjoao

@@ -92,6 +92,28 @@ menciona `@claude` num issue ou comentário de PR (ex.: *"@claude adiciona um
 endpoint GET /api/ping"*) → o agente implementa numa branch e abre/atualiza o PR,
 na tua subscrição; os gates + reviews validam-no.
 
+**Proteger a `main` (o que torna os sensores *obrigatórios*).** Os checks e o
+`CODEOWNERS` só *impedem* o merge com a branch protegida — senão são só conselho e
+o agente pode fazer merge do próprio PR. Configura uma vez (precisa de admin no repo):
+
+```bash
+gh api -X PUT repos/OWNER/REPO/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": { "strict": false,
+    "contexts": ["Pre-flight checks", "Supply chain & secrets", "Laravel", "Vue + TS"] },
+  "enforce_admins": false,
+  "required_pull_request_reviews": { "required_approving_review_count": 1,
+    "require_code_owner_reviews": true, "dismiss_stale_reviews": true },
+  "restrictions": null
+}
+JSON
+```
+
+Passa a exigir PR + os 4 gates deterministas + 1 aprovação humana (e do `CODEOWNERS`
+nos caminhos sensíveis) antes de qualquer merge. Os jobs condicionais (AI review,
+security, e2e) ficam *fora* dos required checks: podem ser saltados — e um check
+saltado mas exigido bloquearia o PR para sempre. Informam o revisor, não o bloqueiam.
+
 ### 6. Validar que tudo funciona
 
 ```bash
