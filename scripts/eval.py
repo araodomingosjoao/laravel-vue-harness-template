@@ -36,6 +36,8 @@ POLICY_FILE = ROOT / "config" / "harness" / "policy.yml"
 # (subscrição logada localmente, ou CLAUDE_CODE_OAUTH_TOKEN no CI).
 AGENT_TIMEOUT = 1800  # segundos — alinha com budgets.max_duration_seconds
 AGENT_ALLOWED_TOOLS = "Bash,Read,Edit,Write,Glob,Grep"
+# Sonnet por defeito (mais barato que Opus); override com HARNESS_EVAL_MODEL.
+AGENT_MODEL = os.environ.get("HARNESS_EVAL_MODEL", "claude-sonnet-4-6")
 
 
 def load_policy() -> dict:
@@ -106,6 +108,7 @@ def run_agent(task: dict) -> dict:
         started = time.time()
         proc = subprocess.run(
             ["claude", "-p", task["prompt"], "--output-format", "json",
+             "--model", AGENT_MODEL,
              "--permission-mode", "acceptEdits", "--allowedTools", AGENT_ALLOWED_TOOLS],
             cwd=sandbox, capture_output=True, text=True, timeout=AGENT_TIMEOUT,
         )
