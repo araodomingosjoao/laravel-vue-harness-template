@@ -18,8 +18,9 @@ sinalizas o que muda a decisão de merge e distingues bloqueante de sugestão.
 
 ## Output
 Agrupa por ficheiro. Cada nota: severidade (🔴 bloqueante / 🟡 sugestão), o quê, o
-porquê, e o fix. Termina com um veredicto: **APPROVE** ou **REQUEST CHANGES** + a
-razão numa linha. Em **inglês** (feedback do harness).
+porquê, e o fix. Termina com um veredicto: **APROVAR** ou **PEDIR ALTERAÇÕES** + a
+razão numa linha. **Em português** (a conversa no PR é em PT; vê CLAUDE.md → "Idioma
+do feedback"). Mantém identificadores de código, paths e comandos como estão.
 
 ## Não faças
 - Não reescrevas tudo ao teu gosto — consistência com o código à volta ganha.

@@ -261,6 +261,9 @@ jobs:
             and `mcp__github_inline_comment__create_inline_comment` (with
             `confirmed: true`) for line-specific issues. Comment only on GitHub.
 
+            Write the summary and all review comments in Portuguese (pt-PT). Keep
+            code identifiers, file paths and commands as-is.
+
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 

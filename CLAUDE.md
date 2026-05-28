@@ -195,10 +195,14 @@ dizer sozinho.
 
 > Na dúvida, não comentes. É mais fácil acrescentar um comentário em falta do que limpar ruído.
 
-**Idioma do feedback:** comentários e docs do projecto são em português, mas tudo
-o que o harness **emite como feedback** — mensagens de CI (`::notice::`/`::error::`),
-output dos scripts, e os comentários do AI review nos PRs — é em **inglês** (a
-mesma regra dos commits).
+**Idioma do feedback:** divide-se por audiência.
+
+- **Em português** — a conversa do PR que um humano lê: comentários do **AI review**,
+  o veredicto do `code-reviewer`, e tudo o que o `@claude` publica (descrição do PR,
+  spec, perguntas em aberto). Também os comentários e docs do projecto.
+- **Em inglês** — o que é mecânico/de tooling: mensagens de CI (`::notice::`/`::error::`),
+  output dos scripts (`composer gates`, `python scripts/*`), e as **mensagens de commit**
+  (Conventional Commits). Mantém sempre identificadores de código, paths e comandos como estão.
 
 ## Convenções de commits
 

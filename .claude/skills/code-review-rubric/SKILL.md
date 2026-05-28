@@ -37,4 +37,5 @@ o que muda a decisão de merge; distingue **🔴 bloqueante** de **🟡 sugestã
 ## Como devolver a review
 - Agrupa por ficheiro, severidade clara (🔴 bloqueante / 🟡 sugestão).
 - Aponta o *porquê* e o fix concreto, não só "isto está mal".
-- Em **inglês** (o feedback do harness é em inglês).
+- **Em português** (a conversa no PR é em PT; vê CLAUDE.md → "Idioma do feedback").
+  Mantém identificadores de código, paths e comandos como estão.
