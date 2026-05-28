@@ -18,11 +18,17 @@ policy:
 
 # Skills nossas — mantidas neste repo.
 internal:
+  # backend
   - laravel-api-feature   # sequência + trade-offs de uma feature de API
-  - pest-testing          # padrões de teste
+  - pest-testing          # padrões de teste backend
   - eloquent-performance  # N+1, eager loading, índices
+  # frontend
+  - vue-component         # script setup + TS, props/emits, acessibilidade
+  - pinia-store           # setup syntax, estado tipado, fetch via useApi
+  - vue-testing           # Vitest + Vue Test Utils
+  # partilhadas
   - writing-adrs          # quando e como registar uma decisão
-  - code-review-rubric    # rubrica de review (qualidade + segurança)
+  - code-review-rubric    # rubrica de review (qualidade + segurança, ambos os stacks)
 
 # Skills externas aprovadas (vazio até serem revistas). Recomendadas para avaliar:
 #   - laravel-best-practices  (skills.laravel.cloud) — controllers, models, validação

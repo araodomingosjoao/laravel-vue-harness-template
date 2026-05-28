@@ -15,7 +15,9 @@ o que muda a decisão de merge; distingue **🔴 bloqueante** de **🟡 sugestã
 ## 2. Convenções (CLAUDE.md)
 - Backend: Form Request (não validação inline), Resource (não model cru), `$fillable`,
   Policy para authz, controller magro, paginação.
-- Sem desativar regras de PHPStan/ESLint para "passar".
+- Frontend: `<script setup lang="ts">`, **sem `any`**, fetch via `useApi` (não `fetch`
+  direto), store Pinia em setup syntax, componente < ~150 linhas.
+- Sem desativar regras de PHPStan/ESLint/vue-tsc para "passar".
 
 ## 3. Segurança (bloqueante)
 - **Authorization**: toda a ação sensível passa por Policy. Sem IDOR (aceder a recurso de
@@ -23,6 +25,7 @@ o que muda a decisão de merge; distingue **🔴 bloqueante** de **🟡 sugestã
 - **Mass assignment**: `$fillable` explícito; sem `$guarded = []`.
 - **Injeção**: query builder/bindings, nunca SQL/HTML concatenado. Input validado.
 - **Segredos**: nada de chaves/tokens no código; sem dados sensíveis em logs.
+- **Frontend**: sem `v-html` com input não-confiável (XSS); nenhum segredo no código do browser.
 
 ## 4. Performance
 - N+1 (ver `eloquent-performance`), paginação em listagens, sem queries em loops.

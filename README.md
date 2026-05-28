@@ -175,8 +175,9 @@ agnóstico — é deliberadamente focado.
 │   ├── code-reviewer.md      # revê o diff (read-only)
 │   └── adr-author.md         # regista decisões significativas
 ├── .claude/skills/           # Conhecimento sénior reutilizável (preload nos agentes)
-│   ├── laravel-api-feature/  ├── pest-testing/  ├── eloquent-performance/
-│   └── writing-adrs/  └── code-review-rubric/
+│   ├── laravel-api-feature/  pest-testing/  eloquent-performance/   # backend
+│   ├── vue-component/  pinia-store/  vue-testing/                   # frontend
+│   └── writing-adrs/  code-review-rubric/                           # partilhadas
 │
 ├── .github/                  # CI/CD, templates de issues e PRs
 │   ├── workflows/agent-pr.yml   # gates + AI review + security review + e2e
