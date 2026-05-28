@@ -1,0 +1,31 @@
+# Allow-list e política de skills do harness (.claude/skills/).
+#
+# Skills são prompt reutilizável que entra no contexto dos agentes. As NOSSAS
+# (internal) são fonte de verdade, alinhadas ao CLAUDE.md. Skills EXTERNAS são
+# supply-chain — prompt de terceiros — e só entram se vetadas, revistas e fixadas.
+
+policy:
+  # Skills externas só destas fontes, e só depois de revistas + fixadas.
+  trusted_sources:
+    - "skills.laravel.cloud"   # directório oficial Laravel/PHP
+    - "skills.sh"              # passa por 3 auditorias de segurança independentes
+  review_required: true
+  # Como adicionar uma externa:
+  #   1. `npx skills add <owner/repo>`
+  #   2. rever o SKILL.md à mão (sem instruções de exfiltração, override de regras,
+  #      ou tools inesperadas) — é prompt que os agentes vão seguir
+  #   3. fixar a versão/commit e listá-la em `external` abaixo
+
+# Skills nossas — mantidas neste repo.
+internal:
+  - laravel-api-feature   # sequência + trade-offs de uma feature de API
+  - pest-testing          # padrões de teste
+  - eloquent-performance  # N+1, eager loading, índices
+  - writing-adrs          # quando e como registar uma decisão
+  - code-review-rubric    # rubrica de review (qualidade + segurança)
+
+# Skills externas aprovadas (vazio até serem revistas). Recomendadas para avaliar:
+#   - laravel-best-practices  (skills.laravel.cloud) — controllers, models, validação
+#   - laravel-tdd             (skills.laravel.cloud) — TDD com Pest
+#   - security-audit-skill    (github.com/netresearch) — auditoria OWASP PHP
+external: []

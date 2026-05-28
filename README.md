@@ -167,10 +167,16 @@ agnóstico — é deliberadamente focado.
 ├── CHANGELOG.template.md     # Versões do template
 ├── .harness-template-version # Versão actual do template usado
 │
-├── .claude/agents/           # Sub-agentes especializados
-│   ├── spec-writer.md
-│   ├── laravel-backend.md
-│   └── vue-frontend.md
+├── .claude/agents/           # Sub-agentes do pipeline (planear→executar→rever)
+│   ├── spec-writer.md        # clarifica pedidos vagos
+│   ├── tech-planner.md       # planeia a task (read-only)
+│   ├── laravel-backend.md    # implementa backend
+│   ├── vue-frontend.md       # implementa frontend
+│   ├── code-reviewer.md      # revê o diff (read-only)
+│   └── adr-author.md         # regista decisões significativas
+├── .claude/skills/           # Conhecimento sénior reutilizável (preload nos agentes)
+│   ├── laravel-api-feature/  ├── pest-testing/  ├── eloquent-performance/
+│   └── writing-adrs/  └── code-review-rubric/
 │
 ├── .github/                  # CI/CD, templates de issues e PRs
 │   ├── workflows/agent-pr.yml   # gates + AI review + security review + e2e
@@ -180,7 +186,8 @@ agnóstico — é deliberadamente focado.
 │
 ├── config/harness/           # Política do harness
 │   ├── policy.yml            # Budgets, rate limits, kill switch, risco
-│   └── dependencies.yml      # Allow-list de packages
+│   ├── dependencies.yml      # Allow-list de packages
+│   └── skills.yml            # Allow-list/política de skills (internas + externas vetadas)
 │
 ├── scripts/                  # Ferramentas operacionais
 │   ├── init.sh               # Bootstrap interactivo

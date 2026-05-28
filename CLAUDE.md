@@ -105,9 +105,26 @@ resources/js/
 
 6. **Sem `any`**. Se precisas de `any`, escreve `unknown` e faz narrowing.
 
-## Para tasks vagas ou de escopo grande
+## Pipeline de agentes (planear → executar → rever)
 
-Se o pedido for vago, **invoca primeiro o sub-agente `spec-writer`**. Não inventes decisões.
+Tasks não-triviais passam por uma cadeia de sub-agentes especializados, orquestrada
+pelo agente principal (ou pela action `@claude`). **Sub-agentes não invocam outros
+sub-agentes** — encadeia-os a partir do topo, em sequência:
+
+```
+spec-writer → tech-planner → laravel-backend / vue-frontend → code-reviewer → adr-author
+ (clarifica)   (planeia)        (executa o plano)              (revê o diff)   (regista decisão)
+```
+
+- **`spec-writer`** — pedido vago/grande? Clarifica primeiro. Não inventes decisões de produto.
+- **`tech-planner`** — produz o plano técnico (ficheiros, sequência, riscos, testes, "precisa de ADR?"). Read-only.
+- **`laravel-backend` / `vue-frontend`** — executam o plano. Seniores, com skills pré-carregadas.
+- **`code-reviewer`** — revê o diff vs `CLAUDE.md` + segurança antes do PR. Read-only.
+- **`adr-author`** — se o planner sinalizou uma decisão significativa, regista o ADR.
+
+**Tasks pequenas e óbvias** saltam o planner/adr — implementa direto e corre os gates.
+O conhecimento sénior reutilizável vive em `.claude/skills/` (allow-list em
+`config/harness/skills.yml`).
 
 ## Workflow obrigatório para cada task
 
