@@ -26,12 +26,20 @@ internal:
   - vue-component         # script setup + TS, props/emits, acessibilidade
   - pinia-store           # setup syntax, estado tipado, fetch via useApi
   - vue-testing           # Vitest + Vue Test Utils
+  - ui-ux-design          # fundamentos de UX: 4 estados, WCAG, forms, feedback
   # partilhadas
   - writing-adrs          # quando e como registar uma decisão
   - code-review-rubric    # rubrica de review (qualidade + segurança, ambos os stacks)
 
-# Skills externas aprovadas (vazio até serem revistas). Recomendadas para avaliar:
+# Skills externas aprovadas — revistas, vendoradas em .claude/skills/ e fixadas.
+external:
+  - name: frontend-design
+    source: anthropics/skills      # first-party (Anthropic) — risco supply-chain ~nulo
+    license: Apache-2.0            # LICENSE.txt vendorado junto ao SKILL.md
+    pinned: 690f15cac7f7b4c055c5ab109c79ed9259934081
+    why: estética/visual (tipografia, cor, motion); complementa a nossa ui-ux-design
+
+# Recomendadas para avaliar (ainda não revistas/vendoradas):
 #   - laravel-best-practices  (skills.laravel.cloud) — controllers, models, validação
 #   - laravel-tdd             (skills.laravel.cloud) — TDD com Pest
 #   - security-audit-skill    (github.com/netresearch) — auditoria OWASP PHP
-external: []

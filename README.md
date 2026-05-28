@@ -176,7 +176,8 @@ agnóstico — é deliberadamente focado.
 │   └── adr-author.md         # regista decisões significativas
 ├── .claude/skills/           # Conhecimento sénior reutilizável (preload nos agentes)
 │   ├── laravel-api-feature/  pest-testing/  eloquent-performance/   # backend
-│   ├── vue-component/  pinia-store/  vue-testing/                   # frontend
+│   ├── vue-component/  pinia-store/  vue-testing/  ui-ux-design/     # frontend
+│   ├── frontend-design/  (Anthropic, Apache-2.0 — estética/visual)  # externa vetada
 │   └── writing-adrs/  code-review-rubric/                           # partilhadas
 │
 ├── .github/                  # CI/CD, templates de issues e PRs
